@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="7441a2ee-2ab4-4d66-b278-d83ba0d3db3f" name="变更" comment="">
+      <change beforePath="$PROJECT_DIR$/../../_posts/CMakeLists常见字段.md" beforeDir="false" afterPath="$PROJECT_DIR$/../../_posts/CMakeLists常见字段.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../_posts/MCP.md" beforeDir="false" afterPath="$PROJECT_DIR$/../../_posts/MCP.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../_posts/MiniAgi 源码阅读.md" beforeDir="false" afterPath="$PROJECT_DIR$/../../_posts/MiniAgi 源码阅读.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../_posts/RTCP协议详解.md" beforeDir="false" afterPath="$PROJECT_DIR$/../../_posts/RTCP协议详解.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../_posts/RTP协议详解.md" beforeDir="false" afterPath="$PROJECT_DIR$/../../_posts/RTP协议详解.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../_posts/SIMPLEST_FFMPEG_PLAYER源码阅读.md" beforeDir="false" afterPath="$PROJECT_DIR$/../../_posts/SIMPLEST_FFMPEG_PLAYER源码阅读.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../_posts/STL_r1_output.md" beforeDir="false" afterPath="$PROJECT_DIR$/../../_posts/STL_r1_output.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../_posts/WebRTC中的SDP规范.md" beforeDir="false" afterPath="$PROJECT_DIR$/../../_posts/WebRTC中的SDP规范.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../_posts/agent.md" beforeDir="false" afterPath="$PROJECT_DIR$/../../_posts/agent.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../_posts/c++.md" beforeDir="false" afterPath="$PROJECT_DIR$/../../_posts/c++.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../_posts/prompt设计(2).md" beforeDir="false" afterPath="$PROJECT_DIR$/../../_posts/prompt设计(2).md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../_posts/prompt设计.md" beforeDir="false" afterPath="$PROJECT_DIR$/../../_posts/prompt设计.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../_posts/webrtc中的实时通信增强方法.md" beforeDir="false" afterPath="$PROJECT_DIR$/../../_posts/webrtc中的实时通信增强方法.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../_posts/先验概率与后验概率.md" beforeDir="false" afterPath="$PROJECT_DIR$/../../_posts/先验概率与后验概率.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../_posts/拥塞控制.md" beforeDir="false" afterPath="$PROJECT_DIR$/../../_posts/拥塞控制.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../_posts/标定.md" beforeDir="false" afterPath="$PROJECT_DIR$/../../_posts/标定.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../_posts/菜谱速记.md" beforeDir="false" afterPath="$PROJECT_DIR$/../../_posts/菜谱速记.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../_posts/音视频.md" beforeDir="false" afterPath="$PROJECT_DIR$/../../_posts/音视频.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../diary/index.md" beforeDir="false" afterPath="$PROJECT_DIR$/../../diary/index.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/1.jpg" beforeDir="false" afterPath="$PROJECT_DIR$/1.jpg" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/2.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/4.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/5.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/6.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/7.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../虚拟机.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../../themes/butterfly" beforeDir="false" afterPath="$PROJECT_DIR$/../../../themes/butterfly" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../../themes/diaspora" beforeDir="false" afterPath="$PROJECT_DIR$/../../../themes/diaspora" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Python Script" />
+      </list>
+    </option>
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/../../.." />
+  </component>
+  <component name="MarkdownSettingsMigration">
+    <option name="stateVersion" value="1" />
+  </component>
+  <component name="ProjectId" id="2zMKIVmxKIvDEnmHaTBjwc7woCz" />
+  <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "ASKED_ADD_EXTERNAL_FILES": "true",
+    "RunOnceActivity.OpenProjectViewOnStart": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "last_opened_file_path": "D:/呀嘿/myblog/source/pic/封面",
+    "settings.editor.selected.configurable": "com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable"
+  }
+}]]></component>
+  <component name="RunManager">
+    <configuration name="rename" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="封面" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/rename.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <recent_temporary>
+      <list>
+        <item itemvalue="Python.rename" />
+      </list>
+    </recent_temporary>
+  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="应用程序级" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="默认任务">
+      <changelist id="7441a2ee-2ab4-4d66-b278-d83ba0d3db3f" name="变更" comment="" />
+      <created>1751535422987</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1751535422987</updated>
+    </task>
+    <servers />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
+</project>
