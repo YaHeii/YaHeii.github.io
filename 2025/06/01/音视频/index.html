@@ -20,16 +20,16 @@
   <title>音视频传输 - 呀嘿</title>
 
   
-    <meta name="description" content="刚刚开始学习音视频相关的知识，在搜索学习资料的时候发现这个方向做的最多开源的是一位博士生雷霄骅。但是雷博士已经去世，这里表达敬意。文章记录从雷神的博客中自己理解的知识，其中有摘抄的博客内容 视频播放器原理视频播放器拓扑结构 1234567解协议的作用，就是将流媒体协议的数据，解析为标准的相应的封装格式数据。视音频在网络上传播的时候，常常采用各种流媒体协议，例如HTTP，RTMP，或是MMS等等。这">
+    <meta name="description" content="视频播放器原理视频播放器拓扑结构 1234567解协议的作用，就是将流媒体协议的数据，解析为标准的相应的封装格式数据。视音频在网络上传播的时候，常常采用各种流媒体协议，例如HTTP，RTMP，或是MMS等等。这些协议在传输视音频数据的同时，也会传输一些信令数据。这些信令数据包括对播放的控制（播放，暂停，停止），或者对网络状态的描述等。解协议的过程中会去除掉信令数据而只保留视音频数据。例如，采用RT">
 <meta property="og:type" content="article">
 <meta property="og:title" content="音视频传输">
 <meta property="og:url" content="https://yaheii.github.io/2025/06/01/%E9%9F%B3%E8%A7%86%E9%A2%91/index.html">
 <meta property="og:site_name" content="呀嘿">
-<meta property="og:description" content="刚刚开始学习音视频相关的知识，在搜索学习资料的时候发现这个方向做的最多开源的是一位博士生雷霄骅。但是雷博士已经去世，这里表达敬意。文章记录从雷神的博客中自己理解的知识，其中有摘抄的博客内容 视频播放器原理视频播放器拓扑结构 1234567解协议的作用，就是将流媒体协议的数据，解析为标准的相应的封装格式数据。视音频在网络上传播的时候，常常采用各种流媒体协议，例如HTTP，RTMP，或是MMS等等。这">
+<meta property="og:description" content="视频播放器原理视频播放器拓扑结构 1234567解协议的作用，就是将流媒体协议的数据，解析为标准的相应的封装格式数据。视音频在网络上传播的时候，常常采用各种流媒体协议，例如HTTP，RTMP，或是MMS等等。这些协议在传输视音频数据的同时，也会传输一些信令数据。这些信令数据包括对播放的控制（播放，暂停，停止），或者对网络状态的描述等。解协议的过程中会去除掉信令数据而只保留视音频数据。例如，采用RT">
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="https://yaheii.github.io/pic/%E5%A4%B4%E5%83%8F.jpg">
 <meta property="article:published_time" content="2025-05-31T16:00:00.000Z">
-<meta property="article:modified_time" content="2025-07-18T06:28:33.167Z">
+<meta property="article:modified_time" content="2025-07-20T14:31:07.323Z">
 <meta property="article:author" content="Edison.Chen">
 <meta property="article:tag" content="音视频传输">
 <meta property="article:tag" content="RTSP">
@@ -53,7 +53,7 @@
 
   
 
-  <script type="application/ld+json">{"@context":"https://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"Edison.Chen","sameAs":[],"image":"/pic/头像.jpg"},"dateCreated":"2025-06-01T00:00:00+08:00","dateModified":"2025-07-18T14:28:33+08:00","datePublished":"2025-06-01T00:00:00+08:00","description":"","headline":"音视频传输","mainEntityOfPage":{"@type":"WebPage","@id":"https://yaheii.github.io/2025/06/01/%E9%9F%B3%E8%A7%86%E9%A2%91/"},"publisher":{"@type":"Organization","name":"Edison.Chen","sameAs":[],"image":"/pic/头像.jpg","logo":{"@type":"ImageObject","url":"/pic/头像.jpg"}},"url":"https://yaheii.github.io/2025/06/01/%E9%9F%B3%E8%A7%86%E9%A2%91/","keywords":"音视频传输, RTSP, 音视频编解码","thumbnailUrl":"/pic/封面/3.jpg","image":1}</script>
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"Edison.Chen","sameAs":[],"image":"/pic/头像.jpg"},"dateCreated":"2025-06-01T00:00:00+08:00","dateModified":"2025-07-20T22:31:07+08:00","datePublished":"2025-06-01T00:00:00+08:00","description":"","headline":"音视频传输","mainEntityOfPage":{"@type":"WebPage","@id":"https://yaheii.github.io/2025/06/01/%E9%9F%B3%E8%A7%86%E9%A2%91/"},"publisher":{"@type":"Organization","name":"Edison.Chen","sameAs":[],"image":"/pic/头像.jpg","logo":{"@type":"ImageObject","url":"/pic/头像.jpg"}},"url":"https://yaheii.github.io/2025/06/01/%E9%9F%B3%E8%A7%86%E9%A2%91/","keywords":"音视频传输, RTSP, 音视频编解码","thumbnailUrl":"/pic/封面/3.jpg","image":1}</script>
   
 </head>
 <body>
@@ -72,7 +72,7 @@
 
 
 
-<widget class="widget-wrapper recent post-list"><div class="widget-header dis-select"><span class="name">Recent Update</span></div><div class="widget-body fs14"><a class="item title" href="/2025/06/01/%E9%9F%B3%E8%A7%86%E9%A2%91/"><span class="title">音视频传输</span></a><a class="item title" href="/2025/07/18/%E7%9B%B4%E6%92%AD%E7%BB%93%E6%9E%84/"><span class="title">直播系统的架构分析</span></a><a class="item title" href="/2024/07/06/%E5%8F%B0%E7%90%83%E8%AE%AD%E7%BB%83/"><span class="title">台球训练心得</span></a><a class="item title" href="/2025/07/03/%E5%AF%B9%E7%BD%91%E7%BB%9C%E7%9A%84%E7%90%86%E8%A7%A3/"><span class="title">对网络的理解</span></a><a class="item title" href="/2025/07/13/%E9%9F%B3%E8%A7%86%E9%A2%91%E6%8E%A7%E5%88%B6%E6%B5%81%E5%88%86%E6%9E%90/"><span class="title">音视频控制流分析</span></a><a class="item title" href="/2025/07/08/%E5%A4%A7%E5%9E%8BCC++%E9%A1%B9%E7%9B%AE%E7%9A%84%E7%BC%96%E8%AF%91%E5%99%A9%E6%A2%A6/"><span class="title">大型C/C++项目的编译噩梦</span></a><a class="item title" href="/2025/06/10/SIMPLEST_FFMPEG_PLAYER%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB/"><span class="title">SIMPLEST_FFMPEG_PLAYER源码阅读</span></a><a class="item title" href="/2025/06/26/WebRTC%E4%B8%AD%E7%9A%84SDP%E8%A7%84%E8%8C%83/"><span class="title">WebRTC中的SDP规范</span></a><a class="item title" href="/2025/06/23/webrtc%E4%B8%AD%E7%9A%84%E5%AE%9E%E6%97%B6%E9%80%9A%E4%BF%A1%E5%A2%9E%E5%BC%BA%E6%96%B9%E6%B3%95/"><span class="title">提高实时通信中音视频服务质量的方法</span></a><a class="item title" href="/2025/05/05/STL_r1_output/"><span class="title">C++中的STL标准库</span></a></div></widget>
+<widget class="widget-wrapper recent post-list"><div class="widget-header dis-select"><span class="name">Recent Update</span></div><div class="widget-body fs14"><a class="item title" href="/2025/06/01/%E9%9F%B3%E8%A7%86%E9%A2%91/"><span class="title">音视频传输</span></a><a class="item title" href="/2025/06/10/SIMPLEST_FFMPEG_PLAYER%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB/"><span class="title">SIMPLEST_FFMPEG_PLAYER源码阅读</span></a><a class="item title" href="/2025/07/18/%E7%9B%B4%E6%92%AD%E7%BB%93%E6%9E%84/"><span class="title">直播系统的架构分析</span></a><a class="item title" href="/2024/07/06/%E5%8F%B0%E7%90%83%E8%AE%AD%E7%BB%83/"><span class="title">台球训练心得</span></a><a class="item title" href="/2025/07/03/%E5%AF%B9%E7%BD%91%E7%BB%9C%E7%9A%84%E7%90%86%E8%A7%A3/"><span class="title">对网络的理解</span></a><a class="item title" href="/2025/07/13/%E9%9F%B3%E8%A7%86%E9%A2%91%E6%8E%A7%E5%88%B6%E6%B5%81%E5%88%86%E6%9E%90/"><span class="title">音视频控制流分析</span></a><a class="item title" href="/2025/07/08/%E5%A4%A7%E5%9E%8BCC++%E9%A1%B9%E7%9B%AE%E7%9A%84%E7%BC%96%E8%AF%91%E5%99%A9%E6%A2%A6/"><span class="title">大型C/C++项目的编译噩梦</span></a><a class="item title" href="/2025/06/26/WebRTC%E4%B8%AD%E7%9A%84SDP%E8%A7%84%E8%8C%83/"><span class="title">WebRTC中的SDP规范</span></a><a class="item title" href="/2025/06/23/webrtc%E4%B8%AD%E7%9A%84%E5%AE%9E%E6%97%B6%E9%80%9A%E4%BF%A1%E5%A2%9E%E5%BC%BA%E6%96%B9%E6%B3%95/"><span class="title">提高实时通信中音视频服务质量的方法</span></a><a class="item title" href="/2025/05/05/STL_r1_output/"><span class="title">C++中的STL标准库</span></a></div></widget>
 </div>
 
 </div></aside><div class="l_main" id="main">
@@ -85,7 +85,7 @@
   <div class="content">
     <div class="top bread-nav footnote"><div class="left"><div class="flex-row" id="breadcrumb"><a class="cap breadcrumb" href="/">Home</a>
 <span class="sep"></span><a class="cap breadcrumb" href="/">Blog</a><span class="sep"></span><a class="cap breadcrumb-link" href="/categories/technology/">technology</a> <span class="sep"></span> <a class="cap breadcrumb-link" href="/categories/technology/%E9%9F%B3%E8%A7%86%E9%A2%91/">音视频</a></div>
-<div class="flex-row" id="post-meta"><span class="text created">Posted on: <time datetime="2025-05-31T16:00:00.000Z">2025-06-01</time></span><span class="sep updated"></span><span class="text updated">Updated on: <time datetime="2025-07-18T06:28:33.167Z">2025-07-18</time></span></div></div></div>
+<div class="flex-row" id="post-meta"><span class="text created">Posted on: <time datetime="2025-05-31T16:00:00.000Z">2025-06-01</time></span><span class="sep updated"></span><span class="text updated">Updated on: <time datetime="2025-07-20T14:31:07.323Z">2025-07-20</time></span></div></div></div>
     
     <div class="bottom only-title">
       
@@ -96,8 +96,7 @@
     </div>
     
   </div>
-  </div><article class="md-text content"><p>刚刚开始学习音视频相关的知识，在搜索学习资料的时候发现这个方向做的最多开源的是一位博士生雷霄骅。但是雷博士已经去世，这里表达敬意。文章记录从雷神的博客中自己理解的知识，其中有摘抄的博客内容</p>
-<h1 id="视频播放器原理"><a href="#视频播放器原理" class="headerlink" title="视频播放器原理"></a>视频播放器原理</h1><h2 id="视频播放器拓扑结构"><a href="#视频播放器拓扑结构" class="headerlink" title="视频播放器拓扑结构"></a>视频播放器拓扑结构</h2><p><img src="/../pic/FFMPEG/%E8%A7%86%E9%A2%91%E6%92%AD%E6%94%BE%E5%99%A8%E6%B5%81%E7%A8%8B.png" alt="alt text"></p>
+  </div><article class="md-text content"><h1 id="视频播放器原理"><a href="#视频播放器原理" class="headerlink" title="视频播放器原理"></a>视频播放器原理</h1><h2 id="视频播放器拓扑结构"><a href="#视频播放器拓扑结构" class="headerlink" title="视频播放器拓扑结构"></a>视频播放器拓扑结构</h2><p><img src="/../pic/FFMPEG/%E8%A7%86%E9%A2%91%E6%92%AD%E6%94%BE%E5%99%A8%E6%B5%81%E7%A8%8B.png" alt="alt text"></p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">解协议的作用，就是将流媒体协议的数据，解析为标准的相应的封装格式数据。视音频在网络上传播的时候，常常采用各种流媒体协议，例如HTTP，RTMP，或是MMS等等。这些协议在传输视音频数据的同时，也会传输一些信令数据。这些信令数据包括对播放的控制（播放，暂停，停止），或者对网络状态的描述等。解协议的过程中会去除掉信令数据而只保留视音频数据。例如，采用RTMP协议传输的数据，经过解协议操作后，输出FLV格式的数据。</span><br><span class="line"></span><br><span class="line">解封装的作用，就是将输入的封装格式的数据，分离成为音频流压缩编码数据和视频流压缩编码数据。封装格式种类很多，例如MP4，MKV，RMVB，TS，FLV，AVI等等，它的作用就是将已经压缩编码的视频数据和音频数据按照一定的格式放到一起。例如，FLV格式的数据，经过解封装操作后，输出H.264编码的视频码流和AAC编码的音频码流。</span><br><span class="line"></span><br><span class="line">解码的作用，就是将视频/音频压缩编码数据，解码成为非压缩的视频/音频原始数据。音频的压缩编码标准包含AAC，MP3，AC-3等等，视频的压缩编码标准则包含H.264，MPEG2，VC-1等等。解码是整个系统中最重要也是最复杂的一个环节。通过解码，压缩编码的视频数据输出成为非压缩的颜色数据，例如YUV420P，RGB等等；压缩编码的音频数据输出成为非压缩的音频抽样数据，例如PCM数据。</span><br><span class="line"></span><br><span class="line">视音频同步的作用，就是根据解封装模块处理过程中获取到的参数信息，同步解码出来的视频和音频数据，并将视频音频数据送至系统的显卡和声卡播放出来。</span><br></pre></td></tr></table></figure>
 
 <h2 id="流媒体协议"><a href="#流媒体协议" class="headerlink" title="流媒体协议"></a>流媒体协议</h2><p><img src="/../pic/FFMPEG/%E6%B5%81%E5%AA%92%E4%BD%93%E5%8D%8F%E8%AE%AE.png" alt="流媒体协议"></p>
@@ -128,7 +127,9 @@
 <li><strong>局限性：</strong> 尽管LDAC能够传输高码率音频，但其传输质量受限于蓝牙连接的稳定性。在复杂的无线环境下，码率可能会自适应下降以维持连接。此外，其使用范围主要集中在索尼和安卓生态系统内，苹果iOS设备目前不支持LDAC。</li>
 <li><strong>与传统编码器的区别：</strong> 与你表格中列出的AAC、MP3、AC-3、WMA等主要用于音频文件存储和流媒体分发的编码器不同，LDAC更侧重于<strong>无线传输</strong>过程中的高质量编码，尤其是在蓝牙这个带宽有限的载体上。AAC、MP3等通常是音频文件的<strong>格式</strong>，而LDAC是<strong>传输协议</strong>的一部分，用于将这些格式的音频数据通过蓝牙高效传输。</li>
 </ul>
-<h1 id="什么是RTSP（流媒体协议）"><a href="#什么是RTSP（流媒体协议）" class="headerlink" title="什么是RTSP（流媒体协议）"></a>什么是RTSP（流媒体协议）</h1><h2 id="RTSP的组成"><a href="#RTSP的组成" class="headerlink" title="RTSP的组成"></a>RTSP的组成</h2><p>RTSP是一个实时的传输协议，是一个应用层的协议，包RTSP协议，RTP协议，RTCP协议。</p>
+<div class="tag-plugin colorful note" color="blue"><div class="body"><p>上面介绍了常见的协议、封装、编码。下面举其中经典的例子来做原理说明</p></div></div>
+
+<h1 id="协议之RTSP"><a href="#协议之RTSP" class="headerlink" title="协议之RTSP"></a>协议之RTSP</h1><h2 id="RTSP的组成"><a href="#RTSP的组成" class="headerlink" title="RTSP的组成"></a>RTSP的组成</h2><p>RTSP是一个实时的传输协议，是一个应用层的协议，包RTSP协议，RTP协议，RTCP协议。</p>
 <ul>
 <li>RTSP协议主要是负责建立服务器和客户端之间的请求和相应，建立通信链路。</li>
 <li>RTP协议是负责在服务器和客户端进行传输数据，</li>
@@ -152,13 +153,18 @@
 </ol>
 <h2 id="RTSP协议格式"><a href="#RTSP协议格式" class="headerlink" title="RTSP协议格式"></a>RTSP协议格式</h2><p><a target="_blank" rel="noopener" href="https://blog.csdn.net/leixiaohua1020/article/details/11955341">文章</a></p>
 <p>在client和server的连接中，还需要使用SDP描述符，连接中有关于SDP的协议说明。</p>
-<h1 id="TS封装或者FLV封装"><a href="#TS封装或者FLV封装" class="headerlink" title="TS封装或者FLV封装"></a>TS封装或者FLV封装</h1><h1 id="编码"><a href="#编码" class="headerlink" title="编码"></a>编码</h1><h2 id="视频帧内编码"><a href="#视频帧内编码" class="headerlink" title="视频帧内编码"></a>视频帧内编码</h2><p>视频编码词用压缩技术来减少码率，而压缩的理论依据主要来源于：</p>
+<h1 id="视频编码之"><a href="#视频编码之" class="headerlink" title="视频编码之"></a>视频编码之</h1><h2 id="视频帧内编码"><a href="#视频帧内编码" class="headerlink" title="视频帧内编码"></a>视频帧内编码</h2><p>视频编码词用压缩技术来减少码率，而压缩的理论依据主要来源于：</p>
 <ol>
 <li>数据冗余，通过关联图像中的各像素，来实现无损压缩</li>
 <li>视觉冗余，在人眼的可分辨范围外通过引入客观失真来实现有损压缩。</li>
 </ol>
 <p>变换编码：首先将源图像切割，然后对切割后的小块进行DCT变换，这个小块叫做<strong>宏块</strong>，在对图像块经过DCT变换后的系数进行量化，在传送过程中只传递一部分数据。实现有损压缩。实现有损压缩。</p>
-<h2 id="视频帧间编码"><a href="#视频帧间编码" class="headerlink" title="视频帧间编码"></a>视频帧间编码</h2><p>采用运动估计和运动补偿的方法来实现，第一步还是实现图像分割，然后在前一图像或者后抑恶图像某个搜索窗口的范围内未每一一个图像块寻找最为相似的图像块，通过计算这两个图像块的变换关系得到运动矢量。将两个图像块相减得到残差图像。前一个过程叫做运动估计，后一个过程叫做运动补偿。</p>
+<h2 id="视频帧间编码"><a href="#视频帧间编码" class="headerlink" title="视频帧间编码"></a>视频帧间编码</h2><p>采用运动估计和运动补偿的方法来实现，第一步还是实现图像分割，然后在前一图像或者后抑恶图像某个搜索窗口的范围内未每一一个图像块寻找最为相似的图像块，通过计算这两个图像块的变换关系得到运动矢量。将两个图像块相减得到残差图像。前一个过程叫做运动估计，后一个过程叫做运动补偿。<br>在H264中为了提高视频压缩质量，引入I帧、P帧、B帧。</p>
+<p>I帧只使用本帧内数据编码，不需要考虑消除时间序列相关性。P帧使用前面的I帧或P帧来做运动估计和补偿。B帧使用前面的一个I帧或P帧，或后面一个I帧或P帧；来进行预测。使用B帧可以实现高压缩比。但是如果P帧和参考B帧遭到破坏，其他所有依赖于它们的帧就不能完整解码，这会直接导致视频故障。视频通常无法从此类问题中恢复。然而，当被破坏的视频流到达I帧，因为I帧被独立地编码解码，所以视频问题可以从I帧恢复。</p>
+<p>一个序列的第一个图像叫做IDR 图像（立即刷新图像），IDR 图像都是 I 帧图像。引入 IDR 图像是为了解码的重同步，当解码器解码到 IDR 图像时，立即将参考帧队列清空，将已解码的数据全部输出或抛弃，重新查找参数集，开始一个新的序列。这样，如果前一个序列出现重大错误，在这里可以获得重新同步的机会。IDR图像之后的图像永远不会使用IDR之前的图像的数据来解码。</p>
+<p>一个序列就是一段内容差异不太大的图像编码后生成的一串数据流。当运动变化比较少时，一个序列可以很长，因为运动变化少就代表图像画面的内容变动很小，所以就可以编一个I帧，然后一直P帧、B帧了。当运动变化多时，可能一个序列就比较短了，比如就包含一个I帧和3、4个P帧。</p>
+<p>在视频编码序列中，GOP即Group of picture（图像组），指两个I帧之间的距离，Reference（参考周期）指两个P帧之间的距离。两个I帧之间形成一组图片，就是GOP。</p>
+<p><img src="/../pic/FFMPEG/GOP.png" alt="GOP"></p>
 <h2 id="编码器算法"><a href="#编码器算法" class="headerlink" title="编码器算法"></a>编码器算法</h2><p>视频编码器能够自主的比较帧内预测和帧间预测的结果，选择出最佳结果，即<strong>模式选择</strong>。并且编码器应该对每个宏块能做出如下处理：</p>
 <blockquote>
 <ol>
@@ -168,13 +174,6 @@
 <li>完全跳过（帧内或帧间预测）</li>
 </ol>
 </blockquote>
-<p>同时为了提高视频压缩质量，引入I帧、P帧、B帧。</p>
-<p>I帧只使用本帧内数据编码，不需要考虑消除时间序列相关性。P帧使用前面的I帧或P帧来做运动估计和补偿。B帧使用前面的一个I帧或P帧，或后面一个I帧或P帧；来进行预测。使用B帧可以实现高压缩比。但是如果P帧和参考B帧遭到破坏，其他所有依赖于它们的帧就不能完整解码，这会直接导致视频故障。视频通常无法从此类问题中恢复。然而，当被破坏的视频流到达I帧，因为I帧被独立地编码解码，所以视频问题可以从I帧恢复。</p>
-<p>在H264中图像以序列为单位进行组织，一个序列是一段图像编码后的数据流。</p>
-<p>一个序列的第一个图像叫做IDR 图像（立即刷新图像），IDR 图像都是 I 帧图像。H.264 引入 IDR 图像是为了解码的重同步，当解码器解码到 IDR 图像时，立即将参考帧队列清空，将已解码的数据全部输出或抛弃，重新查找参数集，开始一个新的序列。这样，如果前一个序列出现重大错误，在这里可以获得重新同步的机会。IDR图像之后的图像永远不会使用IDR之前的图像的数据来解码。</p>
-<p>一个序列就是一段内容差异不太大的图像编码后生成的一串数据流。当运动变化比较少时，一个序列可以很长，因为运动变化少就代表图像画面的内容变动很小，所以就可以编一个I帧，然后一直P帧、B帧了。当运动变化多时，可能一个序列就比较短了，比如就包含一个I帧和3、4个P帧。</p>
-<p>在视频编码序列中，GOP即Group of picture（图像组），指两个I帧之间的距离，Reference（参考周期）指两个P帧之间的距离。两个I帧之间形成一组图片，就是GOP。</p>
-<p><img src="/../pic/%E9%9F%B3%E8%A7%86%E9%A2%91%E4%BC%A0%E8%BE%93/GOP.png" alt="GOP"></p>
 <blockquote>
 <p>下面重点解释一下B帧预测的逻辑。</p>
 </blockquote>
@@ -247,7 +246,59 @@
 </ul>
 </li>
 </ol>
-<h2 id="音频编码-1"><a href="#音频编码-1" class="headerlink" title="音频编码"></a>音频编码</h2><p>同样在音频方向也包括有损压缩和无损压缩。有损即去掉弱音信号或者去掉人耳听觉范围外的频率（&lt;20Hz||&gt;&#x3D;20KHz）.</p>
+<h2 id="H264解析"><a href="#H264解析" class="headerlink" title="H264解析"></a>H264解析</h2><p>同样的在H264中也有IBP帧类型，但是更重要的时其中的两层功能概念、NALU概念、slice、以及两种格式：</p>
+<p>在H264中图像以序列为单位进行组织，一个序列是一段图像编码后的数据流。即NALU，它的功能分为两层，VCL（视频编码层）和NAL（网络提取层）。</p>
+<h3 id="两层功能"><a href="#两层功能" class="headerlink" title="两层功能"></a>两层功能</h3><ul>
+<li>VCL包括核心压缩引擎和块，宏块和片的语法级别定义，设计目标是尽可能独立于网路进行高效的编码。具体步骤如下：</li>
+</ul>
+<ol>
+<li>压缩：预测（帧内预测和帧间预测）-&gt; DCT 变化和量化 -&gt; 比特流编码；</li>
+<li>切分数据，主要为了第三步。这里一点，网上看到的“切片（slice）”、“宏块（macroblock）”是在VCL 中的概念，一方面提高编码效率和降低误码率、另一方面提高网络传输的灵活性。</li>
+<li>压缩切分后的 VCL 数据会包装成为 NAL 中的一部分。</li>
+</ol>
+<ul>
+<li>NAL负责将VCL产生的比特字符串适配到各种各样的网络和多元环境中去。覆盖了所有片级以上语法。</li>
+</ul>
+<h3 id="NALU"><a href="#NALU" class="headerlink" title="NALU"></a>NALU</h3><p>NALU &#x3D; header+Payload<br>header一般有一个字节组成，如下图<br><img src="/../pic/FFMPEG/NALU%E5%A4%B4.png"></p>
+<ul>
+<li><p>forbidden位在网络发生i错误的时候会被置为1，告诉对方丢掉这个单元。</p>
+</li>
+<li><p>nal_ref_idc表示当前NALU的重要性，若值小，在解码器处理不过来的时候可以选择丢掉</p>
+</li>
+<li><p>nal_unit_type表示NALU类型<br><img src="/../pic/FFMPEG/NALU%E7%B1%BB%E5%9E%8B.png"></p>
+</li>
+<li><p>1-4：I&#x2F;P&#x2F;B帧，如果 nal_ref_idc 为 0，则表示 I 帧，不为 0 则为 P&#x2F;B 帧。</p>
+</li>
+<li><p>5：IDR帧，I 帧的一种，告诉解码器，之前依赖的解码参数集合（接下来要出现的 SPS\PPS 等）可以被刷新了。</p>
+</li>
+<li><p>6：SEI，英文全称 Supplemental Enhancement Information，翻译为“补充增强信息”，提供了向视频码流中加入额外信息的方法。</p>
+</li>
+<li><p>7：SPS，全称 Sequence Paramater Set，翻译为“序列参数集”。SPS 中保存了一组编码视频序列（Coded Video Sequence）的全局参数。因此该类型保存的是和编码序列相关的参数。</p>
+</li>
+<li><p>8: PPS，全称 Picture Paramater Set，翻译为“图像参数集”。该类型保存了整体图像相关的参数。</p>
+</li>
+<li><p>9：AU 分隔符，AU 全称 Access Unit，它是一个或者多个 NALU 的集合，代表了一个完整的帧，有时候用于解码中的帧边界识别。</p>
+</li>
+</ul>
+<p>SPS 和 PPS 存储了编解码需要一些图像参数，SPS,PPS 需要在 I 帧前出现，不然解码器没法解码。而 SPS,PPS 出现的频率也跟不同应用场景有关，对于一个本地 h264 流，可能只要在第一个 I 帧前面出现一次就可以，但对于直播流，每个 I 帧前面都应该插入 sps 或 pps，因为直播时客户端进入的时间是不确定的。</p>
+<mark class="tag-plugin colorful mark" color="red">对于Payload,H264也做了不同类型的规定</mark>
+<ul>
+<li>SODB，英文全称 String Of Data Bits，称原始数据比特流，就是最原始的编码&#x2F;压缩得到的数据。</li>
+<li>RBSP英文全称 Raw Byte Sequence Payload，又称原始字节序列载荷。和 SODB 关系如下：RBSP &#x3D; SODB + RBSP Trailing Bits（RBSP尾部补齐字节），引入 RBSP Trailing Bits 做 8 位字节补齐。</li>
+<li>EBSP英文全称 Encapsulated Byte Sequence Payload，称为扩展字节序列载荷。和 RBSP 关系如下：</li>
+</ul>
+<p>EBSP ：RBSP插入防竞争字节（<code>0x03</code>）<br>这里说明下防止竞争字节（0x03）：可以先认为 H264 会插入一个叫做 StartCode 的字节串来分割 NALU，于是问题来了，如果 RBSP 中也包括了 StartCode（0x000001 或 0x00000001）怎么办呢？所以，就有了防止竞争字节（0x03）：</p>
+<h3 id="slice"><a href="#slice" class="headerlink" title="slice"></a>slice</h3><p>H264视频压缩后会成为一个序列帧，帧里包含图像，图像分为很多片，每个片可以分为宏块，每个宏块由许多子块组成 H264结构中，一个视频图像编码后的数据叫做一帧，一帧由一个片（slice）或多个片组成，一个片由一个或多个宏块（MB）组成，一个宏块由16x16的yuv数据组成。宏块作为H264编码的基本单位。</p>
+<ul>
+<li>场和帧：视频的一场或者一帧可以用来产生一个编码图像。在电视中，每个电视帧都是通过扫描屏幕两次而产生的，第二个扫描的线条刚好填满第一次扫描所留下的缝隙。每个扫描即称为一个场。因此 30 帧&#x2F;秒的电视画面实际上为 60 场&#x2F;秒</li>
+<li>片：每个图像中，若干个宏块被排列成片。片的目的：为了限制误码的扩散和传输，使编码片相互间保持独立。片共有5种类型：I片（只包含I宏块）、P片（P和I宏块）、B片（B和I宏块）、SP片（用于不同编码流之间的切换）和SI片（特殊类型的编码宏块）。NALU中承载的就是这些片</li>
+<li>宏块：一个编码图像首先要划分成多个块（4x4 像素）才能进行处理，显然宏块应该是整数个块组成，通常宏块大小为16x16个像素。宏块分为I、P、B宏块，I宏块只能利用当前片中已解码的像素作为参考进行帧内预测；P宏块可以利用前面已解码的图像作为参考图像进行帧内预测；B宏块则是利用前后向的参考图形进行帧内预测<br><img src="/../pic/FFMPEG/H264%E7%BB%84%E7%BB%87%E5%BD%A2%E5%BC%8F.png"></li>
+</ul>
+<h3 id="两种格式"><a href="#两种格式" class="headerlink" title="两种格式"></a>两种格式</h3><p>分别为字节流AnnexB格式 和 AVCC格式。前者用于实时播放，后者用于存储</p>
+<h4 id="AnnexB格式"><a href="#AnnexB格式" class="headerlink" title="AnnexB格式"></a>AnnexB格式</h4><p>在这种格式中每个NALU都必须使用start code来分割（0x000001,<mark class="tag-plugin colorful mark" color="yellow">单帧多个slice</mark>或0x00000001，<mark class="tag-plugin colorful mark" color="yellow">帧之间，或者SPS、PPS等之前</mark>一般是四字节），并且SPS和PPS按流的方式写在头部。</p>
+<p>NALU &#x3D; header+EBSP</p>
+<h4 id="AVCC"><a href="#AVCC" class="headerlink" title="AVCC"></a>AVCC</h4><p>在这种格式中，每一个NALU包都加上了一个指定其长度(NALU包大小)的前缀(in big endian format大端格式)，这种格式的包非常容易解析，但是这种格式去掉了Annex B格式中的字节对齐特性，而且前缀可以是1、2或4字节，这让AVCC格式变得更复杂了，指定前缀字节数(1、2或4字节)的值保存在一个头部对象中(流开始的部分)，这个头通常称为’extradata’或者’sequence header’。</p>
+<h1 id="音频编码之AAC"><a href="#音频编码之AAC" class="headerlink" title="音频编码之AAC"></a>音频编码之AAC</h1><p>同样在音频方向也包括有损压缩和无损压缩。有损即去掉弱音信号或者去掉人耳听觉范围外的频率（&lt;20Hz||&gt;&#x3D;20KHz）.</p>
 <p>关于音频的采样量化等方法以传统的PCM为例。</p>
 <p>常见的无损方法：</p>
 <blockquote>
@@ -264,6 +315,7 @@
 <p>ADIF：Audio Data Interchange Format 音频数据交换格式。这种格式的特征是可以确定的找到这个音频数据的开始，不需进行在音频数据流中间开始的解码，即它的解码必须在明确定义的开始处进行。故这种格式常用在磁盘文件中。</p>
 <p>ADTS：Audio Data Transport Stream 音频数据传输流。这种格式的特征是它是一个有同步字的比特流，解码可以在这个流中任何位置开始。它的特征类似于mp3数据流格式。这种格式可以用于广播电视。</p>
 <p>简言之。ADIF只有一个文件头，ADTS每个包前面有一个文件头。</p>
+<p>对于AAC的头，一般为七个字节或者五个字节。具体头格式查表。</p>
 </article>
 <div class="article-footer">
     <section id="license">
@@ -300,7 +352,7 @@
 
 
 
-<widget class="widget-wrapper toc" id="data-toc" collapse="false"><div class="widget-header dis-select"><span class="name">On This Page</span><a class="cap-action" onclick="sidebar.toggleTOC()" ><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6h11m-11 6h11m-11 6h11M4 6h1v4m-1 0h2m0 8H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg></a></div><div class="widget-body"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#%E8%A7%86%E9%A2%91%E6%92%AD%E6%94%BE%E5%99%A8%E5%8E%9F%E7%90%86"><span class="toc-text">视频播放器原理</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%A7%86%E9%A2%91%E6%92%AD%E6%94%BE%E5%99%A8%E6%8B%93%E6%89%91%E7%BB%93%E6%9E%84"><span class="toc-text">视频播放器拓扑结构</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%B5%81%E5%AA%92%E4%BD%93%E5%8D%8F%E8%AE%AE"><span class="toc-text">流媒体协议</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%B0%81%E8%A3%85%E6%A0%BC%E5%BC%8F"><span class="toc-text">封装格式</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%A7%86%E9%A2%91%E7%BC%96%E7%A0%81"><span class="toc-text">视频编码</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E9%9F%B3%E9%A2%91%E7%BC%96%E7%A0%81"><span class="toc-text">音频编码</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E4%BB%80%E4%B9%88%E6%98%AFRTSP%EF%BC%88%E6%B5%81%E5%AA%92%E4%BD%93%E5%8D%8F%E8%AE%AE%EF%BC%89"><span class="toc-text">什么是RTSP（流媒体协议）</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#RTSP%E7%9A%84%E7%BB%84%E6%88%90"><span class="toc-text">RTSP的组成</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#RTSP%E7%9A%84%E8%BF%87%E7%A8%8B"><span class="toc-text">RTSP的过程</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#RTSP%E4%B8%8EHTTP%E7%9A%84%E5%85%B3%E7%B3%BB"><span class="toc-text">RTSP与HTTP的关系</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#RTSP%E5%8D%8F%E8%AE%AE%E6%A0%BC%E5%BC%8F"><span class="toc-text">RTSP协议格式</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#TS%E5%B0%81%E8%A3%85%E6%88%96%E8%80%85FLV%E5%B0%81%E8%A3%85"><span class="toc-text">TS封装或者FLV封装</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E7%BC%96%E7%A0%81"><span class="toc-text">编码</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%A7%86%E9%A2%91%E5%B8%A7%E5%86%85%E7%BC%96%E7%A0%81"><span class="toc-text">视频帧内编码</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%A7%86%E9%A2%91%E5%B8%A7%E9%97%B4%E7%BC%96%E7%A0%81"><span class="toc-text">视频帧间编码</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%BC%96%E7%A0%81%E5%99%A8%E7%AE%97%E6%B3%95"><span class="toc-text">编码器算法</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E9%9F%B3%E9%A2%91%E7%BC%96%E7%A0%81-1"><span class="toc-text">音频编码</span></a></li></ol></li></ol></div><div class="widget-footer">
+<widget class="widget-wrapper toc" id="data-toc" collapse="false"><div class="widget-header dis-select"><span class="name">On This Page</span><a class="cap-action" onclick="sidebar.toggleTOC()" ><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6h11m-11 6h11m-11 6h11M4 6h1v4m-1 0h2m0 8H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg></a></div><div class="widget-body"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#%E8%A7%86%E9%A2%91%E6%92%AD%E6%94%BE%E5%99%A8%E5%8E%9F%E7%90%86"><span class="toc-text">视频播放器原理</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%A7%86%E9%A2%91%E6%92%AD%E6%94%BE%E5%99%A8%E6%8B%93%E6%89%91%E7%BB%93%E6%9E%84"><span class="toc-text">视频播放器拓扑结构</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%B5%81%E5%AA%92%E4%BD%93%E5%8D%8F%E8%AE%AE"><span class="toc-text">流媒体协议</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%B0%81%E8%A3%85%E6%A0%BC%E5%BC%8F"><span class="toc-text">封装格式</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%A7%86%E9%A2%91%E7%BC%96%E7%A0%81"><span class="toc-text">视频编码</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E9%9F%B3%E9%A2%91%E7%BC%96%E7%A0%81"><span class="toc-text">音频编码</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%8D%8F%E8%AE%AE%E4%B9%8BRTSP"><span class="toc-text">协议之RTSP</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#RTSP%E7%9A%84%E7%BB%84%E6%88%90"><span class="toc-text">RTSP的组成</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#RTSP%E7%9A%84%E8%BF%87%E7%A8%8B"><span class="toc-text">RTSP的过程</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#RTSP%E4%B8%8EHTTP%E7%9A%84%E5%85%B3%E7%B3%BB"><span class="toc-text">RTSP与HTTP的关系</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#RTSP%E5%8D%8F%E8%AE%AE%E6%A0%BC%E5%BC%8F"><span class="toc-text">RTSP协议格式</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E8%A7%86%E9%A2%91%E7%BC%96%E7%A0%81%E4%B9%8B"><span class="toc-text">视频编码之</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%A7%86%E9%A2%91%E5%B8%A7%E5%86%85%E7%BC%96%E7%A0%81"><span class="toc-text">视频帧内编码</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%A7%86%E9%A2%91%E5%B8%A7%E9%97%B4%E7%BC%96%E7%A0%81"><span class="toc-text">视频帧间编码</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%BC%96%E7%A0%81%E5%99%A8%E7%AE%97%E6%B3%95"><span class="toc-text">编码器算法</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#H264%E8%A7%A3%E6%9E%90"><span class="toc-text">H264解析</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B8%A4%E5%B1%82%E5%8A%9F%E8%83%BD"><span class="toc-text">两层功能</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#NALU"><span class="toc-text">NALU</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#slice"><span class="toc-text">slice</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B8%A4%E7%A7%8D%E6%A0%BC%E5%BC%8F"><span class="toc-text">两种格式</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#AnnexB%E6%A0%BC%E5%BC%8F"><span class="toc-text">AnnexB格式</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#AVCC"><span class="toc-text">AVCC</span></a></li></ol></li></ol></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E9%9F%B3%E9%A2%91%E7%BC%96%E7%A0%81%E4%B9%8BAAC"><span class="toc-text">音频编码之AAC</span></a></li></ol></div><div class="widget-footer">
 
 <a class="top" onclick="util.scrollTop()"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><!-- Icon from Solar by 480 Design - https://creativecommons.org/licenses/by/4.0/ --><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="1.5"><path stroke-linejoin="round" d="m9 15.5l3-3l3 3m-6-4l3-3l3 3"/><path d="M7 3.338A9.95 9.95 0 0 1 12 2c5.523 0 10 4.477 10 10s-4.477 10-10 10S2 17.523 2 12c0-1.821.487-3.53 1.338-5"/></g></svg><span>Scroll to Top</span></a></div></widget>
 </div></aside><div class='float-panel'>
