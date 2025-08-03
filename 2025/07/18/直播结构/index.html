@@ -17,19 +17,19 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
   <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#000">
   <meta name="theme-color" content="#f9fafb">
-  <title>直播系统的架构分析（undo） - 呀嘿</title>
+  <title>流媒体基础 - 呀嘿</title>
 
   
-    <meta name="description" content="最近在研究直播系统的架构，在学习的过程中发现直播系统的结构很复杂，一方面是音视频传输过程中的协议不兼容，例如RTSP在现代播放器的不兼容，需要转码才能进行播放。另一方面则是附属功能的复杂，例如礼物，公屏互动等等。还有一方面则是多个拉流会导致拥塞情况，CDN的分发需要考虑高并发。所以准备一边做这个项目，一边从架构角度梳理一下直播系统的搭建过程中应该考虑的问题。  协议解析RTMPRTMP是过去常用">
+    <meta name="description" content="最近在研究直播系统的架构，在学习的过程中发现直播系统的结构很复杂，一方面是音视频传输过程中的协议不兼容，例如RTSP在现代播放器的不兼容，需要转码才能进行播放。另一方面则是附属功能的复杂，例如礼物，公屏互动等等。还有一方面则是多个拉流会导致拥塞情况，CDN的分发需要考虑高并发。所以准备一边做这个项目，一边从架构角度梳理一下直播系统的搭建过程中应该考虑的问题。  协议解析RTSP协议栈RTSP协议">
 <meta property="og:type" content="article">
-<meta property="og:title" content="直播系统的架构分析（undo）">
+<meta property="og:title" content="流媒体基础">
 <meta property="og:url" content="https://yaheii.github.io/2025/07/18/%E7%9B%B4%E6%92%AD%E7%BB%93%E6%9E%84/index.html">
 <meta property="og:site_name" content="呀嘿">
-<meta property="og:description" content="最近在研究直播系统的架构，在学习的过程中发现直播系统的结构很复杂，一方面是音视频传输过程中的协议不兼容，例如RTSP在现代播放器的不兼容，需要转码才能进行播放。另一方面则是附属功能的复杂，例如礼物，公屏互动等等。还有一方面则是多个拉流会导致拥塞情况，CDN的分发需要考虑高并发。所以准备一边做这个项目，一边从架构角度梳理一下直播系统的搭建过程中应该考虑的问题。  协议解析RTMPRTMP是过去常用">
+<meta property="og:description" content="最近在研究直播系统的架构，在学习的过程中发现直播系统的结构很复杂，一方面是音视频传输过程中的协议不兼容，例如RTSP在现代播放器的不兼容，需要转码才能进行播放。另一方面则是附属功能的复杂，例如礼物，公屏互动等等。还有一方面则是多个拉流会导致拥塞情况，CDN的分发需要考虑高并发。所以准备一边做这个项目，一边从架构角度梳理一下直播系统的搭建过程中应该考虑的问题。  协议解析RTSP协议栈RTSP协议">
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="https://yaheii.github.io/pic/%E5%A4%B4%E5%83%8F.jpg">
 <meta property="article:published_time" content="2025-07-17T16:00:00.000Z">
-<meta property="article:modified_time" content="2025-08-02T06:15:43.346Z">
+<meta property="article:modified_time" content="2025-08-03T13:24:42.012Z">
 <meta property="article:author" content="Edison.Chen">
 <meta property="article:tag" content="RTSP">
 <meta property="article:tag" content="Nginx">
@@ -54,7 +54,7 @@
 
   
 
-  <script type="application/ld+json">{"@context":"https://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"Edison.Chen","sameAs":[],"image":"/pic/头像.jpg"},"dateCreated":"2025-07-18T00:00:00+08:00","dateModified":"2025-08-02T14:15:43+08:00","datePublished":"2025-07-18T00:00:00+08:00","description":"","headline":"直播系统的架构分析（undo）","mainEntityOfPage":{"@type":"WebPage","@id":"https://yaheii.github.io/2025/07/18/%E7%9B%B4%E6%92%AD%E7%BB%93%E6%9E%84/"},"publisher":{"@type":"Organization","name":"Edison.Chen","sameAs":[],"image":"/pic/头像.jpg","logo":{"@type":"ImageObject","url":"/pic/头像.jpg"}},"url":"https://yaheii.github.io/2025/07/18/%E7%9B%B4%E6%92%AD%E7%BB%93%E6%9E%84/","keywords":"RTSP, Nginx, HLS, RTMP","thumbnailUrl":"/pic/封面/15.jpg","image":1}</script>
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"Edison.Chen","sameAs":[],"image":"/pic/头像.jpg"},"dateCreated":"2025-07-18T00:00:00+08:00","dateModified":"2025-08-03T21:24:42+08:00","datePublished":"2025-07-18T00:00:00+08:00","description":"","headline":"流媒体基础","mainEntityOfPage":{"@type":"WebPage","@id":"https://yaheii.github.io/2025/07/18/%E7%9B%B4%E6%92%AD%E7%BB%93%E6%9E%84/"},"publisher":{"@type":"Organization","name":"Edison.Chen","sameAs":[],"image":"/pic/头像.jpg","logo":{"@type":"ImageObject","url":"/pic/头像.jpg"}},"url":"https://yaheii.github.io/2025/07/18/%E7%9B%B4%E6%92%AD%E7%BB%93%E6%9E%84/","keywords":"RTSP, Nginx, HLS, RTMP","thumbnailUrl":"/pic/封面/15.jpg","image":1}</script>
   
 </head>
 <body>
@@ -69,11 +69,11 @@
 <nav class="menu dis-select"><a class="nav-item" title="技术" href="/categories/technology/" style="color:#3DC550"><span>技术</span></a><a class="nav-item" title="书影" href="/categories/Books/" style="color:#3DC550"><span>书影</span></a><a class="nav-item" title="周记" href="/diary/" style="color:#3DC550"><span>周记</span></a><a class="nav-item" title="生活" href="/categories/life/" style="color:#3DC550"><span>生活</span></a></nav>
 </div>
 <div class="widgets">
-<div class="search-wrapper" id="search-wrapper"><form class="search-form"><a class="search-button" onclick="document.getElementById(&quot;search-input&quot;).focus();"><svg t="1705074644177" viewBox="0 0 1025 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="1560" width="200" height="200"><path d="M1008.839137 935.96571L792.364903 719.491476a56.783488 56.783488 0 0 0-80.152866 0 358.53545 358.53545 0 1 1 100.857314-335.166073 362.840335 362.840335 0 0 1-3.689902 170.145468 51.248635 51.248635 0 1 0 99.217358 26.444296 462.057693 462.057693 0 1 0-158.255785 242.303546l185.930047 185.725053a51.248635 51.248635 0 0 0 72.568068 0 51.248635 51.248635 0 0 0 0-72.978056z" p-id="1561"></path><path d="M616.479587 615.969233a50.428657 50.428657 0 0 0-61.498362-5.534852 174.655348 174.655348 0 0 1-177.525271 3.484907 49.403684 49.403684 0 0 0-58.833433 6.76482l-3.074918 2.869923a49.403684 49.403684 0 0 0 8.609771 78.10292 277.767601 277.767601 0 0 0 286.992355-5.739847 49.403684 49.403684 0 0 0 8.404776-76.667958z" p-id="1562"></path></svg></a><input type="text" class="search-input" id="search-input" placeholder="Search"></form><div id="search-result"></div><div class="search-no-result">No Results!</div></div>
+<div class="search-wrapper" id="search-wrapper"><form class="search-form"><a class="search-button" onclick="document.getElementById(&quot;search-input&quot;).focus();"><svg t="1705074644177" viewBox="0 0 1025 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="1560" width="200" height="200"><path d="M1008.839137 935.96571L792.364903 719.491476a56.783488 56.783488 0 0 0-80.152866 0 358.53545 358.53545 0 1 1 100.857314-335.166073 362.840335 362.840335 0 0 1-3.689902 170.145468 51.248635 51.248635 0 1 0 99.217358 26.444296 462.057693 462.057693 0 1 0-158.255785 242.303546l185.930047 185.725053a51.248635 51.248635 0 0 0 72.568068 0 51.248635 51.248635 0 0 0 0-72.978056z" p-id="1561"></path><path d="M616.479587 615.969233a50.428657 50.428657 0 0 0-61.498362-5.534852 174.655348 174.655348 0 0 1-177.525271 3.484907 49.403684 49.403684 0 0 0-58.833433 6.76482l-3.074918 2.869923a49.403684 49.403684 0 0 0 8.609771 78.10292 277.767601 277.767601 0 0 0 286.992355-5.739847 49.403684 49.403684 0 0 0 8.404776-76.667958z" p-id="1562"></path></svg></a><input type="text" class="search-input" id="search-input" placeholder="站内搜索"></form><div id="search-result"></div><div class="search-no-result">没有找到内容！</div></div>
 
 
 
-<widget class="widget-wrapper recent post-list"><div class="widget-header dis-select"><span class="name">Recent Update</span></div><div class="widget-body fs14"><a class="item title" href="/2025/06/26/WebRTC%E4%B8%AD%E7%9A%84SDP%E8%A7%84%E8%8C%83/"><span class="title">WebRTC中的SDP规范</span></a><a class="item title" href="/2025/07/18/%E7%9B%B4%E6%92%AD%E7%BB%93%E6%9E%84/"><span class="title">直播系统的架构分析（undo）</span></a><a class="item title" href="/2025/07/22/%E9%9F%B3%E9%A2%91%E9%87%8D%E9%87%87%E6%A0%B7/"><span class="title">音频重采样</span></a><a class="item title" href="/2025/07/31/%E5%9B%9E%E8%B0%83%E5%87%BD%E6%95%B0/"><span class="title">回调函数</span></a><a class="item title" href="/2025/07/25/%E9%AB%98%E6%80%A7%E8%83%BDRTSP%E6%9C%8D%E5%8A%A1%E5%99%A8/"><span class="title">高性能RTSP服务器</span></a><a class="item title" href="/2025/07/13/%E9%9F%B3%E8%A7%86%E9%A2%91%E6%8E%A7%E5%88%B6%E6%B5%81%E5%88%86%E6%9E%90/"><span class="title">音视频控制流分析</span></a><a class="item title" href="/2025/07/23/socket%E7%BC%96%E7%A8%8B/"><span class="title">socket编程</span></a><a class="item title" href="/2025/06/27/RTP%E5%8D%8F%E8%AE%AE%E8%AF%A6%E8%A7%A3/"><span class="title">RTP、RTCP、RTSP协议详解</span></a><a class="item title" href="/2025/06/01/%E9%9F%B3%E8%A7%86%E9%A2%91/"><span class="title">音视频传输</span></a><a class="item title" href="/2025/07/03/%E5%AF%B9%E7%BD%91%E7%BB%9C%E7%9A%84%E7%90%86%E8%A7%A3/"><span class="title">对网络的理解</span></a></div></widget>
+<widget class="widget-wrapper recent post-list"><div class="widget-header dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><a class="item title" href="/2025/07/18/%E7%9B%B4%E6%92%AD%E7%BB%93%E6%9E%84/"><span class="title">流媒体基础</span></a><a class="item title" href="/2025/06/26/WebRTC%E4%B8%AD%E7%9A%84SDP%E8%A7%84%E8%8C%83/"><span class="title">WebRTC中的SDP规范</span></a><a class="item title" href="/2025/07/22/%E9%9F%B3%E9%A2%91%E9%87%8D%E9%87%87%E6%A0%B7/"><span class="title">音频重采样</span></a><a class="item title" href="/2025/07/31/%E5%9B%9E%E8%B0%83%E5%87%BD%E6%95%B0/"><span class="title">回调函数</span></a><a class="item title" href="/2025/07/25/%E9%AB%98%E6%80%A7%E8%83%BDRTSP%E6%9C%8D%E5%8A%A1%E5%99%A8/"><span class="title">高性能RTSP服务器</span></a><a class="item title" href="/2025/07/13/%E9%9F%B3%E8%A7%86%E9%A2%91%E6%8E%A7%E5%88%B6%E6%B5%81%E5%88%86%E6%9E%90/"><span class="title">音视频控制流分析</span></a><a class="item title" href="/2025/07/23/socket%E7%BC%96%E7%A8%8B/"><span class="title">socket编程</span></a><a class="item title" href="/2025/06/27/RTP%E5%8D%8F%E8%AE%AE%E8%AF%A6%E8%A7%A3/"><span class="title">RTP、RTCP、RTSP协议详解</span></a><a class="item title" href="/2025/06/01/%E9%9F%B3%E8%A7%86%E9%A2%91/"><span class="title">音视频传输</span></a><a class="item title" href="/2025/07/03/%E5%AF%B9%E7%BD%91%E7%BB%9C%E7%9A%84%E7%90%86%E8%A7%A3/"><span class="title">对网络的理解</span></a></div></widget>
 </div>
 <footer class="footer dis-select"><div class="social-wrap"><a class="social" href="https://github.com/YaHeii" target="_blank" rel="external nofollow noopener noreferrer"><img src="https://github.com/YaHeii/YaHeii.github.io/raw/main/pic/assets/github.png" alt="GitHub 图标"/></a><a class="social" href="https://music.163.com/#/user/home?id=1543931051" target="_blank" rel="external nofollow noopener noreferrer"><img src="https://github.com/YaHeii/YaHeii.github.io/raw/main/pic/assets/music.png" alt="Music 图标"/></a><a class="social" href="https://www.zhihu.com/people/ya-mo-19-31" target="_blank" rel="external nofollow noopener noreferrer"><img src="https://github.com/YaHeii/YaHeii.github.io/raw/main/pic/assets/zhihu.png" alt="Zhihu 图标"/></a></div></footer>
 </div></aside><div class="l_main" id="main">
@@ -84,14 +84,14 @@
 
 <div class="article banner top">
   <div class="content">
-    <div class="top bread-nav footnote"><div class="left"><div class="flex-row" id="breadcrumb"><a class="cap breadcrumb" href="/">Home</a>
-<span class="sep"></span><a class="cap breadcrumb" href="/">Blog</a><span class="sep"></span><a class="cap breadcrumb-link" href="/categories/technology/">technology</a> <span class="sep"></span> <a class="cap breadcrumb-link" href="/categories/technology/%E9%9F%B3%E8%A7%86%E9%A2%91/">音视频</a></div>
-<div class="flex-row" id="post-meta"><span class="text created">Posted on: <time datetime="2025-07-17T16:00:00.000Z">2025-07-18</time></span><span class="sep updated"></span><span class="text updated">Updated on: <time datetime="2025-08-02T06:15:43.346Z">2025-08-02</time></span></div></div></div>
+    <div class="top bread-nav footnote"><div class="left"><div class="flex-row" id="breadcrumb"><a class="cap breadcrumb" href="/">主页</a>
+<span class="sep"></span><a class="cap breadcrumb" href="/">文章</a><span class="sep"></span><a class="cap breadcrumb-link" href="/categories/technology/">technology</a> <span class="sep"></span> <a class="cap breadcrumb-link" href="/categories/technology/%E9%9F%B3%E8%A7%86%E9%A2%91/">音视频</a></div>
+<div class="flex-row" id="post-meta"><span class="text created">发布于：<time datetime="2025-07-17T16:00:00.000Z">2025-07-18</time></span><span class="sep updated"></span><span class="text updated">更新于：<time datetime="2025-08-03T13:24:42.012Z">2025-08-03</time></span></div></div></div>
     
     <div class="bottom only-title">
       
       <div class="text-area">
-        <h1 class="text title"><span>直播系统的架构分析（undo）</span></h1>
+        <h1 class="text title"><span>流媒体基础</span></h1>
         
       </div>
     </div>
@@ -100,28 +100,64 @@
   </div><article class="md-text content"><blockquote>
 <p>最近在研究直播系统的架构，在学习的过程中发现直播系统的结构很复杂，一方面是音视频传输过程中的协议不兼容，例如RTSP在现代播放器的不兼容，需要转码才能进行播放。另一方面则是附属功能的复杂，例如礼物，公屏互动等等。<br>还有一方面则是多个拉流会导致拥塞情况，CDN的分发需要考虑高并发。所以准备一边做这个项目，一边从架构角度梳理一下直播系统的搭建过程中应该考虑的问题。</p>
 </blockquote>
-<h2 id="协议解析"><a href="#协议解析" class="headerlink" title="协议解析"></a>协议解析</h2><h3 id="RTMP"><a href="#RTMP" class="headerlink" title="RTMP"></a>RTMP</h3><p>RTMP是过去常用的标准，但是由于与现在的浏览器不兼容，所以流的制作方面使用会变少。但是在内容推送方面还是用的最广。</p>
-<h3 id="HLS"><a href="#HLS" class="headerlink" title="HLS"></a>HLS</h3><p>HLS是适配最好的协议，Apple开发的。但是流的延迟很大，在网上看到的资料大约都是10s左右。这个协议是将流切片发送，分片下载。</p>
-<h3 id="webrtc"><a href="#webrtc" class="headerlink" title="webrtc"></a>webrtc</h3><p>由于浏览器内置的原因，基于Webrtc的开发一方面延迟极低，另一方面网络拥塞等控制也会很好。</p>
-<h3 id="FLV"><a href="#FLV" class="headerlink" title="FLV"></a>FLV</h3><p>和HLS不同的是，HLS本质上就是HTTP文件下载，而HTTP-FLV本质上是流传输。CDN对于HTTP文件下载的支持很完善，因此HLS的兼容性比HTTP-FLV 要好很多；同样HTTP-FLV的延迟比HLS要低很多，基本上可以做到3的5秒左右延迟，而HLS的延迟一般是8到10秒以上。</p>
-<h3 id="SRT"><a href="#SRT" class="headerlink" title="SRT"></a>SRT</h3><p>目前准备替代RTMP的协议，基本上只要在网上搜索RTMP实现直播，那么一定会有人说RTMP的不兼容和服务器端转协议问题。而与之相对应的就是SRT的流行。</p>
+<h1 id="协议解析"><a href="#协议解析" class="headerlink" title="协议解析"></a>协议解析</h1><h2 id="RTSP协议栈"><a href="#RTSP协议栈" class="headerlink" title="RTSP协议栈"></a>RTSP协议栈</h2><p>RTSP协议栈通常与live555 共同出现，在这个协议栈中包括RTP传输，RTCP质量评估，以及RTSP交互。已经有很多文章提到了，这里不再赘述</p>
+<h2 id="RTMP"><a href="#RTMP" class="headerlink" title="RTMP"></a>RTMP</h2><ul>
+<li>连接：类似握手过程（三次）。</li>
+</ul>
+<ol>
+<li><p>C0+C1： 客户端向服务器发送 C0（1字节，表明 RTMP 版本）和 C1（1536字节，包含时间戳等随机数据）两个数据块。</p>
+</li>
+<li><p>S0+S1+S2： 服务器收到 C0&#x2F;C1 后，立刻回复 S0（版本号）、S1（服务器版的时间戳和随机数据）和 S2（将客户端发来的 C1 数据原样返回）三个数据块。</p>
+</li>
+<li><p>C2： 客户端收到 S1 后，回复一个 C2 块（将服务器发来的 S1 数据原样返回）。</p>
+</li>
+</ol>
+<ul>
+<li>数据传输：TCP</li>
+</ul>
+<ol>
+<li><p>connect： 客户端向服务器发起connect命令，请求连接到服务器上的一个指定应用（Application）。例如rtmp:&#x2F;&#x2F;server.com&#x2F;live这里的live就是应用名。这个消息里会包含一些参数，如 Flash 版本、编码信息等。</p>
+</li>
+<li><p>connect response： 服务器验证通过后，会返回一个成功响应，告知客户端可以继续。</p>
+</li>
+<li><p>createStream： 客户端发送createStream命令，请求服务器创建一个逻辑上的“流通道”，服务器会返回一个唯一的 Stream ID。后续的音视频数据都会在这个 ID 上传输。</p>
+</li>
+<li><p>publish： 客户端发送publish命令，并携带一个“流名称”（也叫 “stream key” 或 “secret”），告知服务器：“我准备好要往这个流通道上推送数据了，流的名字是 room123。</p>
+</li>
+<li><p>开始推流: 服务器验证publish命令成功后，客户端就可以正式开始发送音视频数据了。</p>
+</li>
+</ol>
+<p>在传输过程中，RTMP使用了基于chunk的流式结构，为了在一条 TCP 连接上同时传输音频、视频和控制信令而不互相阻塞，RTMP 会把大的数据（如一整个视频帧）拆分成小的“块”（Chunk）。每个 Chunk 都有一个自己的小头部，包含了这个块属于哪个流 （Stream ID）、消息类型、长度等信息。默认的 Chunk 大小是 128 字节。每个完整的音视频帧或元数据，在被拆分成 Chunk 之前，会被打包成一个带有“标签 （Tag）”的数据单元。这个 Tag 的结构（包括 Tag 类型是音频&#x2F;视频&#x2F;脚本数据、时间戳等）和 FLV 文件中的 Tag 结构是一模一样的。</p>
+<p>RTMP是过去Flash时代常用的标准，但是由于与现在的浏览器不兼容，所以流的制作方面使用会变少。但是在内容推送方面还是用的最广。延迟相较于HLS低，但是没有WebRTC低。目前点播平台的主流方案就是RTMP推流，HLS负责分发。在这个过程中核心是媒体服务器，诸如SRS\Nginx-RTMP\Wpwza。它的职责就是接收来自推流端的唯一一路 RTMP 流，然后将其实时转封装 （transmux） 成包含多个码率的 HLS 切片和清单文件，供海量观众通过 CDN 拉取播放。</p>
+<p>另外分发端方案还有Flv。由于flv和RTMP流的数据载体在结构上几乎是一致的，这种设计使得媒体服务器可以极其高效地在 RTMP 和 FLV 之间进行转换。由于没有 HLS 那样的切片和缓冲机制，HTTP-FLV 的延迟可以稳定在 2-5 秒，非常接近 RTMP。 由于它运行在标准的 HTTP 协议之上，可以轻松穿透防火墙，并且不需要像 RTMP 那样使用特殊的 1935 端口。借助flv.js这个强大的库，可以在所有支持 Media Source Extensions （MSE） 的现代浏览器中直接播放 HTTP-FLV 直播，无需 Flash 插件。而HLS兼容CDN，CDN对于HTTP文件下载的支持很完善，因此HLS的兼容性比HTTP-FLV 要好很多；同样HTTP-FLV的延迟比HLS要低很多，基本上可以做到3的5秒左右延迟，而HLS的延迟一般是8到10秒以上。</p>
+<h2 id="HLS-MPEG-DASH"><a href="#HLS-MPEG-DASH" class="headerlink" title="HLS &amp; MPEG-DASH"></a>HLS &amp; MPEG-DASH</h2><ul>
+<li>信令：HTTP</li>
+<li>数据传输：基于TCP的HTTP</li>
+<li>媒体容器：MPEG-2 TS（用于 HLS）、ISO BMFF （MP4）（用于 DASH 和更新的 HLS）。</li>
+</ul>
+<p>有很多优点，但是流的延迟很大，在网上看到的资料大约都是10s左右。这个协议是将流切片，通过HTTP服务器提供发送服务，分片下载。也是比较适合点播，由于依靠标准的web服务器，和CDN能够轻松的扩展几百万的观众，TCP又可以确保可靠交付。还具备自适应比特率，防火墙遍历。</p>
+<h2 id="webrtc"><a href="#webrtc" class="headerlink" title="webrtc"></a>webrtc</h2><p>基于Webrtc的开发一方面延迟极低，另一方面网络拥塞等控制也会很好。它并不是一个单一的协议，而包括了一系列的API和协议，是一个综合性的框架。</p>
+<h2 id="SRT"><a href="#SRT" class="headerlink" title="SRT"></a>SRT</h2><ul>
+<li>数据传输：UDP，但是在数据包级别实现了自己的ARQ机制（自动重复请求），保证了可靠性</li>
+</ul>
+<p>目前准备替代RTMP的协议，基本上只要在网上搜索RTMP实现直播，那么一定会有人说RTMP的不兼容和服务器端转协议问题。而与之相对应的就是SRT的流行。</p>
 <p>SRT使用的封装是TS封装，因此对于新的Codec天然就支持。而SRT基于UDP协议，因此对于延迟和弱网传输，也比RTMP要好不少。 一般RTMP延迟在1到3秒以上，而SRT的延迟在300到500毫秒，而且在弱网下表现也很稳定。在广播电视l领域，由于长距离跨国跨地区 传输，或者户外广播时，网络不稳定，因此SRT比RTMP的优势会更明显。</p>
 <p>SRT是SRS的核心协议，SRS早在2020年即支持了SRT协议，并且在2022年实现了SRT协程化，从而大幅提高了SRT和其他核心协议的一致性。 比如回调和API的支持，SRT和RTMP保持了非常高的一致性。</p>
-<h2 id="推流端"><a href="#推流端" class="headerlink" title="推流端"></a>推流端</h2><p>推流端可以使用OBS，推送到对应的端口。采用的协议可以是RTSP、RTMP、SRT。</p>
+<h1 id="架构分析"><a href="#架构分析" class="headerlink" title="架构分析"></a>架构分析</h1><h2 id="推流端"><a href="#推流端" class="headerlink" title="推流端"></a>推流端</h2><p>推流端可以使用OBS，推送到对应的端口。采用的协议可以是RTSP、RTMP、SRT。</p>
 <h2 id="服务器"><a href="#服务器" class="headerlink" title="服务器"></a>服务器</h2><p>用来接收OBS的推流，可以使用Nginx来做架构。如果拉流端不兼容协议。服务器还需要对流本身进行转换。</p>
 <h2 id="拉流端"><a href="#拉流端" class="headerlink" title="拉流端"></a>拉流端</h2><p>如果选用浏览器，内嵌了播放器，需要向媒体服务器请求流并进行播放。采用的协议有HLS,DASH,HTTP-FLV,WebRTC</p>
-<h2 id="实现路线"><a href="#实现路线" class="headerlink" title="实现路线"></a>实现路线</h2><p>SRS (Simple Realtime Server): 强烈推荐。国人开发的优秀开源项目，文档极其完善（中英文都很好），社区活跃。功能强大，支持RTMP, HLS, HTTP-FLV, WebRTC, SRT等多种协议，性能优异，非常适合作为学习和开发的基础。</p>
-<p>Nginx + nginx-rtmp-module: 配置简单，稳定可靠。可以将接收到的RTMP流轻松转换为HLS或作为HTTP-FLV分发。但模块已多年未更新，对DASH、WebRTC等新协议支持不足。</p>
+<h1 id="实现路线"><a href="#实现路线" class="headerlink" title="实现路线"></a>实现路线</h1><p>SRS (Simple Realtime Server): 支持RTMP, HLS, HTTP-FLV, WebRTC, SRT等多种协议。</p>
+<p>Nginx + nginx-rtmp-module: 可以将接收到的RTMP流轻松转换为HLS或作为HTTP-FLV分发。但模块已多年未更新，对DASH、WebRTC等新协议支持不足。</p>
 </article>
 <div class="article-footer">
     <section id="license">
-      <div class="header"><span>License</span></div>
+      <div class="header"><span>许可协议</span></div>
       <div class="body"><p>本文采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">署名-非商业性使用-相同方式共享 4.0 国际</a> 许可协议，转载请注明出处。</p>
 </div>
     </section>
     
     <section id="share">
-      <div class="header"><span>Share</span></div>
+      <div class="header"><span>分享文章</span></div>
       <div class="body">
         <div class="link"><input class="copy-area" readonly="true" id="copy-link" value="https://yaheii.github.io/2025/07/18/%E7%9B%B4%E6%92%AD%E7%BB%93%E6%9E%84/" /></div>
         <div class="social-wrap dis-select"><a class="social share-item wechat" onclick="util.toggle(&quot;qrcode-wechat&quot;)"><img  src="https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/social/b32ef3da1162a.svg" /></a></div>
@@ -134,7 +170,7 @@
     </section>
     </div>
 
-<div class="related-wrap" id="read-next"><section class="body"><div class="item" id="prev"><div class="note">Newer</div><a href="/2025/07/22/%E9%9F%B3%E9%A2%91%E9%87%8D%E9%87%87%E6%A0%B7/">音频重采样</a></div><div class="item" id="next"><div class="note">Older</div><a href="/2025/07/13/%E9%9F%B3%E8%A7%86%E9%A2%91%E6%8E%A7%E5%88%B6%E6%B5%81%E5%88%86%E6%9E%90/">音视频控制流分析</a></div></section></div>
+<div class="related-wrap" id="read-next"><section class="body"><div class="item" id="prev"><div class="note">较新文章</div><a href="/2025/07/22/%E9%9F%B3%E9%A2%91%E9%87%8D%E9%87%87%E6%A0%B7/">音频重采样</a></div><div class="item" id="next"><div class="note">较早文章</div><a href="/2025/07/13/%E9%9F%B3%E8%A7%86%E9%A2%91%E6%8E%A7%E5%88%B6%E6%B5%81%E5%88%86%E6%9E%90/">音视频控制流分析</a></div></section></div>
 
 
 
@@ -148,9 +184,9 @@
 
 
 
-<widget class="widget-wrapper toc" id="data-toc" collapse="false"><div class="widget-header dis-select"><span class="name">On This Page</span><a class="cap-action" onclick="sidebar.toggleTOC()" ><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6h11m-11 6h11m-11 6h11M4 6h1v4m-1 0h2m0 8H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg></a></div><div class="widget-body"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8D%8F%E8%AE%AE%E8%A7%A3%E6%9E%90"><span class="toc-text">协议解析</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#RTMP"><span class="toc-text">RTMP</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#HLS"><span class="toc-text">HLS</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#webrtc"><span class="toc-text">webrtc</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#FLV"><span class="toc-text">FLV</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#SRT"><span class="toc-text">SRT</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%8E%A8%E6%B5%81%E7%AB%AF"><span class="toc-text">推流端</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%9C%8D%E5%8A%A1%E5%99%A8"><span class="toc-text">服务器</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%8B%89%E6%B5%81%E7%AB%AF"><span class="toc-text">拉流端</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%AE%9E%E7%8E%B0%E8%B7%AF%E7%BA%BF"><span class="toc-text">实现路线</span></a></li></ol></div><div class="widget-footer">
+<widget class="widget-wrapper toc" id="data-toc" collapse="false"><div class="widget-header dis-select"><span class="name">本文目录</span><a class="cap-action" onclick="sidebar.toggleTOC()" ><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6h11m-11 6h11m-11 6h11M4 6h1v4m-1 0h2m0 8H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg></a></div><div class="widget-body"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%8D%8F%E8%AE%AE%E8%A7%A3%E6%9E%90"><span class="toc-text">协议解析</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#RTSP%E5%8D%8F%E8%AE%AE%E6%A0%88"><span class="toc-text">RTSP协议栈</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#RTMP"><span class="toc-text">RTMP</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#HLS-MPEG-DASH"><span class="toc-text">HLS &amp; MPEG-DASH</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#webrtc"><span class="toc-text">webrtc</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#SRT"><span class="toc-text">SRT</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E6%9E%B6%E6%9E%84%E5%88%86%E6%9E%90"><span class="toc-text">架构分析</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%8E%A8%E6%B5%81%E7%AB%AF"><span class="toc-text">推流端</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%9C%8D%E5%8A%A1%E5%99%A8"><span class="toc-text">服务器</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%8B%89%E6%B5%81%E7%AB%AF"><span class="toc-text">拉流端</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%AE%9E%E7%8E%B0%E8%B7%AF%E7%BA%BF"><span class="toc-text">实现路线</span></a></li></ol></div><div class="widget-footer">
 
-<a class="top" onclick="util.scrollTop()"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><!-- Icon from Solar by 480 Design - https://creativecommons.org/licenses/by/4.0/ --><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="1.5"><path stroke-linejoin="round" d="m9 15.5l3-3l3 3m-6-4l3-3l3 3"/><path d="M7 3.338A9.95 9.95 0 0 1 12 2c5.523 0 10 4.477 10 10s-4.477 10-10 10S2 17.523 2 12c0-1.821.487-3.53 1.338-5"/></g></svg><span>Scroll to Top</span></a></div></widget>
+<a class="top" onclick="util.scrollTop()"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><!-- Icon from Solar by 480 Design - https://creativecommons.org/licenses/by/4.0/ --><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="1.5"><path stroke-linejoin="round" d="m9 15.5l3-3l3 3m-6-4l3-3l3 3"/><path d="M7 3.338A9.95 9.95 0 0 1 12 2c5.523 0 10 4.477 10 10s-4.477 10-10 10S2 17.523 2 12c0-1.821.487-3.53 1.338-5"/></g></svg><span>回到顶部</span></a></div></widget>
 </div></aside><div class='float-panel'>
   <button type='button' style='display:none' class='laptop-only rightbar-toggle mobile' onclick='sidebar.rightbar()'>
     <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6h11m-11 6h11m-11 6h11M4 6h1v4m-1 0h2m0 8H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg>
@@ -166,10 +202,10 @@
   window.canonical = {"originalHost":null,"officialHosts":["localhost"],"encoded":""};
   const ctx = {
     date_suffix: {
-      just: `Just`,
-      min: `minutes ago`,
-      hour: `hours ago`,
-      day: `days ago`,
+      just: `刚刚`,
+      min: `分钟前`,
+      hour: `小时前`,
+      day: `天前`,
     },
     root : `/`,
     tag_plugins: {
@@ -592,9 +628,9 @@
     utils.dark.method.toggle.start();
 
     const messages = {
-      light: `Switched to Light Mode`,
-      dark: `Switched to Dark Mode`,
-      auto: `Switched to Auto Mode`,
+      light: `切换到浅色模式`,
+      dark: `切换到深色模式`,
+      auto: `切换到跟随系统配色`,
     }
     hud?.toast?.(messages[newTheme])
   }
