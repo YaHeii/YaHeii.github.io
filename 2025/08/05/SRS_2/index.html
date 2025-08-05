@@ -1,0 +1,886 @@
+
+<!DOCTYPE html><html lang="zh_CN">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="hexo-theme" content="https://github.com/xaoxuu/hexo-theme-stellar/tree/1.32.3" theme-name="Stellar" theme-version="1.32.3">
+  
+  
+  <meta name="generator" content="Hexo 7.1.1">
+  <meta http-equiv='x-dns-prefetch-control' content='on' />
+  
+  <meta name="renderer" content="webkit">
+  <meta name="force-rendering" content="webkit">
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+  <meta name="HandheldFriendly" content="True" >
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#000">
+  <meta name="theme-color" content="#f9fafb">
+  <title>SRS(1)-state thread框架 - 呀嘿</title>
+
+  
+    <meta name="description" content="SRS的协程是基于State-thread（ST）开发的，这篇文章希望能够理清这个框架的基本思路。本篇文章部分讲解来自文章 类似框架首先应该以一个宏观角度去审视框架。业内还有很多类似的协程框架。  首先是libco，这是一个微信开源的CC++协程库，不同于本文提到的ST，这个框架使用了共享栈技术，多个协程在运行时可以分时复用同一块栈内存。 另外是Libgo，可以提供类似Go语言的并发编程体验。它支">
+<meta property="og:type" content="article">
+<meta property="og:title" content="SRS(1)-state thread框架">
+<meta property="og:url" content="https://yaheii.github.io/2025/08/05/SRS_2/index.html">
+<meta property="og:site_name" content="呀嘿">
+<meta property="og:description" content="SRS的协程是基于State-thread（ST）开发的，这篇文章希望能够理清这个框架的基本思路。本篇文章部分讲解来自文章 类似框架首先应该以一个宏观角度去审视框架。业内还有很多类似的协程框架。  首先是libco，这是一个微信开源的CC++协程库，不同于本文提到的ST，这个框架使用了共享栈技术，多个协程在运行时可以分时复用同一块栈内存。 另外是Libgo，可以提供类似Go语言的并发编程体验。它支">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://yaheii.github.io/pic/%E5%A4%B4%E5%83%8F.jpg">
+<meta property="article:published_time" content="2025-08-04T16:00:00.000Z">
+<meta property="article:modified_time" content="2025-08-05T13:28:07.855Z">
+<meta property="article:author" content="Edison.Chen">
+<meta property="article:tag" content="SRS">
+<meta property="article:tag" content="state thread框架">
+<meta property="article:tag" content="协程">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://yaheii.github.io/pic/%E5%A4%B4%E5%83%8F.jpg">
+  
+  
+  
+  <meta name="keywords" content="SRS,state thread框架,协程">
+
+  <!-- feed -->
+  
+
+  <link rel="stylesheet" href="/css/main.css?v=1.32.3">
+
+
+  
+    <link rel="shortcut icon" href="/pic/favicon.png">
+  
+
+  
+
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"Edison.Chen","sameAs":[],"image":"/pic/头像.jpg"},"dateCreated":"2025-08-05T00:00:00+08:00","dateModified":"2025-08-05T21:28:07+08:00","datePublished":"2025-08-05T00:00:00+08:00","description":"","headline":"SRS(1)-state thread框架","mainEntityOfPage":{"@type":"WebPage","@id":"https://yaheii.github.io/2025/08/05/SRS_2/"},"publisher":{"@type":"Organization","name":"Edison.Chen","sameAs":[],"image":"/pic/头像.jpg","logo":{"@type":"ImageObject","url":"/pic/头像.jpg"}},"url":"https://yaheii.github.io/2025/08/05/SRS_2/","keywords":"SRS, state thread框架, 协程","thumbnailUrl":"/pic/封面/22.jpeg","image":1}</script>
+  
+</head>
+<body>
+
+<div class="l_body content" id="start" layout="post" type="tech" ><aside class="l_left"><div class="sidebg"></div><div class="leftbar-container">
+
+
+<header class="header"><div class="logo-wrap"><a class="avatar" href="/about/"><div class="bg" style="opacity:0;background-image:url(https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/avatar/round/rainbow64@3x.webp);"></div><img no-lazy class="avatar" src="/pic/头像.jpg" onerror="javascript:this.classList.add('error');this.src='https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/image/2659360.svg';"></a><a class="title" href="/"><div class="main">呀嘿</div><div class="sub normal cap">让生命重一些</div><div class="sub hover cap" style="opacity:0">但也别忘记享受美好</div></a></div></header>
+
+<div class="nav-area">
+
+<nav class="menu dis-select"><a class="nav-item" title="技术" href="/categories/technology/" style="color:#3DC550"><span>技术</span></a><a class="nav-item" title="书影" href="/categories/Books/" style="color:#3DC550"><span>书影</span></a><a class="nav-item" title="周记" href="/diary/" style="color:#3DC550"><span>周记</span></a><a class="nav-item" title="生活" href="/categories/life/" style="color:#3DC550"><span>生活</span></a></nav>
+</div>
+<div class="widgets">
+<div class="search-wrapper" id="search-wrapper"><form class="search-form"><a class="search-button" onclick="document.getElementById(&quot;search-input&quot;).focus();"><svg t="1705074644177" viewBox="0 0 1025 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="1560" width="200" height="200"><path d="M1008.839137 935.96571L792.364903 719.491476a56.783488 56.783488 0 0 0-80.152866 0 358.53545 358.53545 0 1 1 100.857314-335.166073 362.840335 362.840335 0 0 1-3.689902 170.145468 51.248635 51.248635 0 1 0 99.217358 26.444296 462.057693 462.057693 0 1 0-158.255785 242.303546l185.930047 185.725053a51.248635 51.248635 0 0 0 72.568068 0 51.248635 51.248635 0 0 0 0-72.978056z" p-id="1561"></path><path d="M616.479587 615.969233a50.428657 50.428657 0 0 0-61.498362-5.534852 174.655348 174.655348 0 0 1-177.525271 3.484907 49.403684 49.403684 0 0 0-58.833433 6.76482l-3.074918 2.869923a49.403684 49.403684 0 0 0 8.609771 78.10292 277.767601 277.767601 0 0 0 286.992355-5.739847 49.403684 49.403684 0 0 0 8.404776-76.667958z" p-id="1562"></path></svg></a><input type="text" class="search-input" id="search-input" placeholder="Search"></form><div id="search-result"></div><div class="search-no-result">No Results!</div></div>
+
+
+
+<widget class="widget-wrapper recent post-list"><div class="widget-header dis-select"><span class="name">Recent Update</span></div><div class="widget-body fs14"><a class="item title" href="/2025/08/05/SRS_2/"><span class="title">SRS(1)-state thread框架</span></a><a class="item title" href="/2025/08/04/SRS_1/"><span class="title">SRS(1)-架构分析(WIP)</span></a><a class="item title" href="/2025/07/25/%E9%AB%98%E6%80%A7%E8%83%BDRTSP%E6%9C%8D%E5%8A%A1%E5%99%A8/"><span class="title">高性能RTSP服务器</span></a><a class="item title" href="/2025/07/23/socket%E7%BC%96%E7%A8%8B/"><span class="title">socket编程</span></a><a class="item title" href="/2025/07/18/%E7%9B%B4%E6%92%AD%E7%BB%93%E6%9E%84/"><span class="title">流媒体基础</span></a><a class="item title" href="/2025/06/26/WebRTC%E4%B8%AD%E7%9A%84SDP%E8%A7%84%E8%8C%83/"><span class="title">WebRTC中的SDP规范</span></a><a class="item title" href="/2025/07/22/%E9%9F%B3%E9%A2%91%E9%87%8D%E9%87%87%E6%A0%B7/"><span class="title">音频重采样</span></a><a class="item title" href="/2025/07/31/%E5%9B%9E%E8%B0%83%E5%87%BD%E6%95%B0/"><span class="title">回调函数</span></a><a class="item title" href="/2025/07/13/%E9%9F%B3%E8%A7%86%E9%A2%91%E6%8E%A7%E5%88%B6%E6%B5%81%E5%88%86%E6%9E%90/"><span class="title">音视频控制流分析</span></a><a class="item title" href="/2025/06/27/RTP%E5%8D%8F%E8%AE%AE%E8%AF%A6%E8%A7%A3/"><span class="title">RTP、RTCP、RTSP协议详解</span></a></div></widget>
+</div>
+<footer class="footer dis-select"><div class="social-wrap"><a class="social" href="https://github.com/YaHeii" target="_blank" rel="external nofollow noopener noreferrer"><img src="https://github.com/YaHeii/YaHeii.github.io/raw/main/pic/assets/github.png" alt="GitHub 图标"/></a><a class="social" href="https://music.163.com/#/user/home?id=1543931051" target="_blank" rel="external nofollow noopener noreferrer"><img src="https://github.com/YaHeii/YaHeii.github.io/raw/main/pic/assets/music.png" alt="Music 图标"/></a><a class="social" href="https://www.zhihu.com/people/ya-mo-19-31" target="_blank" rel="external nofollow noopener noreferrer"><img src="https://github.com/YaHeii/YaHeii.github.io/raw/main/pic/assets/zhihu.png" alt="Zhihu 图标"/></a><a class="social" href="https://blog.csdn.net/doctorchen_?spm=1000.2115.3001.5343" target="_blank" rel="external nofollow noopener noreferrer"><img src="https://github.com/YaHeii/YaHeii.github.io/raw/main/pic/assets/csdn.png" alt="CSDN 图标"/></a><a class="social" href="https://space.bilibili.com/610688536?spm_id_from=333.1007.0.0" target="_blank" rel="external nofollow noopener noreferrer"><img src="https://github.com/YaHeii/YaHeii.github.io/raw/main/pic/assets/bilibili.png" alt="Bilibili 图标"/></a></div></footer>
+</div></aside><div class="l_main" id="main">
+
+
+
+
+
+<div class="article banner top">
+  <div class="content">
+    <div class="top bread-nav footnote"><div class="left"><div class="flex-row" id="breadcrumb"><a class="cap breadcrumb" href="/">Home</a>
+<span class="sep"></span><a class="cap breadcrumb" href="/">Blog</a><span class="sep"></span><a class="cap breadcrumb-link" href="/categories/technology/">technology</a> <span class="sep"></span> <a class="cap breadcrumb-link" href="/categories/technology/%E7%BC%96%E7%A8%8B%E5%9F%BA%E7%A1%80/">编程基础</a> <span class="sep"></span> <a class="cap breadcrumb-link" href="/categories/technology/%E9%9F%B3%E8%A7%86%E9%A2%91/">音视频</a></div>
+<div class="flex-row" id="post-meta"><span class="text created">Posted on: <time datetime="2025-08-04T16:00:00.000Z">2025-08-05</time></span><span class="sep updated"></span><span class="text updated">Updated on: <time datetime="2025-08-05T13:28:07.855Z">2025-08-05</time></span></div></div></div>
+    
+    <div class="bottom only-title">
+      
+      <div class="text-area">
+        <h1 class="text title"><span>SRS(1)-state thread框架</span></h1>
+        
+      </div>
+    </div>
+    
+  </div>
+  </div><article class="md-text content"><p>SRS的协程是基于State-thread（ST）开发的，这篇文章希望能够理清这个框架的基本思路。本篇文章部分讲解来自<a target="_blank" rel="noopener" href="https://cloud.tencent.com/developer/article/1197338">文章</a></p>
+<h1 id="类似框架"><a href="#类似框架" class="headerlink" title="类似框架"></a>类似框架</h1><p>首先应该以一个宏观角度去审视框架。业内还有很多类似的协程框架。</p>
+<ul>
+<li>首先是libco，这是一个微信开源的CC++协程库，不同于本文提到的ST，这个框架使用了共享栈技术，多个协程在运行时可以分时复用同一块栈内存。</li>
+<li>另外是Libgo，可以提供类似Go语言的并发编程体验。它支持多线程调度（work-stealing）、Channel通信、协程局部存储（CLS）等高级特性。</li>
+<li>Boost.Coroutine2: C++ Boost库提供的官方协程组件。它更底层、更灵活，提供了构建协程所需的核心能力（上下文切换），但需要用户自己基于它来构建完整的调度器和IO事件循环。</li>
+<li>语言级别的协程支持，是未来的标准方向。通过co_await, co_yield, co_return等关键字，编译器会自动将一个函数转换成状态机，从而实现协程。它与语言结合得最紧密，但需要异步框架（如asio）的配合来驱动IO事件。</li>
+</ul>
+<h1 id="ST框架结构"><a href="#ST框架结构" class="headerlink" title="ST框架结构"></a>ST框架结构</h1><h2 id="核心结构体"><a href="#核心结构体" class="headerlink" title="核心结构体"></a>核心结构体</h2><h3 id="st-vp-t"><a href="#st-vp-t" class="headerlink" title="_st_vp_t"></a>_st_vp_t</h3><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">typedef</span> <span class="keyword">struct</span> <span class="title class_">_st_vp</span> &#123;</span><br><span class="line"></span><br><span class="line">  <span class="type">st_utime_t</span> last_clock;      <span class="comment">/* The last time we went into vp_check_clock() */</span></span><br><span class="line"></span><br><span class="line">  <span class="comment">//下面是四种线程状态</span></span><br><span class="line">  <span class="type">_st_thread_t</span> *idle_thread;  <span class="comment">//idle微线程是框架创建的微线程，只有在没有其他微线程可以调度时，才会被调度执行。主要任务是调用IO多路复用函数等待IO事件和处理定时器。</span></span><br><span class="line">  <span class="type">_st_clist_t</span> run_q;          <span class="comment">//可运行的微线程，等待框架调度即可运行。</span></span><br><span class="line">  <span class="type">_st_clist_t</span> io_q;           <span class="comment">//当微线程需要等待IO事件时，会被放到IO等待队列中。当等待的IO事件发生 或者 超时 或者 被中断时，会从IO等待队列中移除并加入到runable队列中。</span></span><br><span class="line">  <span class="type">_st_clist_t</span> zombie_q;       <span class="comment">//当微线程结束时，如果设置了joinable，即需要其他微线程‘收尸’，就会添加到zombie队列。</span></span><br><span class="line"><span class="meta">#<span class="keyword">ifdef</span> DEBUG</span></span><br><span class="line">  <span class="type">_st_clist_t</span> thread_q;       <span class="comment">/* all threads of this vp */</span></span><br><span class="line"><span class="meta">#<span class="keyword">endif</span></span></span><br><span class="line">  <span class="type">int</span> pagesize;</span><br><span class="line"></span><br><span class="line">  <span class="type">_st_thread_t</span> *sleep_q;      <span class="comment">//数据结构为完全二叉树组织的最小堆结构，当微线程设置了定时器时，就会根据超时时间添加到树中。</span></span><br><span class="line">  <span class="type">int</span> sleepq_size;	          <span class="comment">/* number of threads on sleep queue */</span></span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="keyword">ifdef</span> ST_SWITCH_CB</span></span><br><span class="line">  <span class="type">st_switch_cb_t</span> switch_out_cb;	<span class="comment">/* called when a thread is switched out */</span></span><br><span class="line">  <span class="type">st_switch_cb_t</span> switch_in_cb;	<span class="comment">/* called when a thread is switched in */</span></span><br><span class="line"><span class="meta">#<span class="keyword">endif</span></span></span><br><span class="line">&#125; <span class="type">_st_vp_t</span>;</span><br></pre></td></tr></table></figure>
+
+<h3 id="st-thread-t"><a href="#st-thread-t" class="headerlink" title="st_thread_t"></a>st_thread_t</h3><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">typedef</span> <span class="keyword">struct</span> <span class="title class_">_st_thread</span> &#123;</span><br><span class="line">  <span class="type">int</span> state;                  <span class="comment">/* Thread&#x27;s state */</span></span><br><span class="line">  <span class="type">int</span> flags;                  <span class="comment">/* Thread&#x27;s flags */</span></span><br><span class="line"></span><br><span class="line">  <span class="type">void</span> *(*start)(<span class="type">void</span> *arg);  <span class="comment">/* The start function of the thread */</span></span><br><span class="line">  <span class="type">void</span> *arg;                  <span class="comment">/* Argument of the start function */</span></span><br><span class="line">  <span class="type">void</span> *retval;               <span class="comment">/* Return value of the start function */</span></span><br><span class="line"></span><br><span class="line">  <span class="type">_st_stack_t</span> *stack;	        <span class="comment">/* Info about thread&#x27;s stack */</span></span><br><span class="line"></span><br><span class="line">  <span class="type">_st_clist_t</span> links;          <span class="comment">/* For putting on run/sleep/zombie queue */</span></span><br><span class="line">  <span class="type">_st_clist_t</span> wait_links;     <span class="comment">/* For putting on mutex/condvar wait queue */</span></span><br><span class="line"></span><br><span class="line">  <span class="type">st_utime_t</span> due;             <span class="comment">/* Wakeup time when thread is sleeping */</span></span><br><span class="line">  <span class="type">_st_thread_t</span> *left;         <span class="comment">/* For putting in timeout heap */</span></span><br><span class="line">  <span class="type">_st_thread_t</span> *right;	      <span class="comment">/* -- see docs/timeout_heap.txt for details */</span></span><br><span class="line">  <span class="type">int</span> heap_index;</span><br><span class="line"></span><br><span class="line">  <span class="type">void</span> **private_data;        <span class="comment">/* Per thread private data */</span></span><br><span class="line"></span><br><span class="line">  <span class="type">_st_cond_t</span> *term;           <span class="comment">/* Termination condition variable for join */</span></span><br><span class="line"></span><br><span class="line">  jmp_buf context;            <span class="comment">/* Thread&#x27;s context */</span></span><br><span class="line">&#125; <span class="type">_st_thread_t</span>;</span><br></pre></td></tr></table></figure>
+
+<h3 id="st-stack-t"><a href="#st-stack-t" class="headerlink" title="st_stack_t"></a>st_stack_t</h3><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">typedef</span> <span class="keyword">struct</span> <span class="title class_">_st_stack</span> &#123;</span><br><span class="line">    <span class="comment">// 指向实际栈内存块的起始虚拟地址。</span></span><br><span class="line">    <span class="comment">// 这块内存通常是通过 mmap 系统调用从操作系统申请的一段连续虚拟内存。</span></span><br><span class="line">    <span class="comment">// 协程的所有函数调用、局部变量都存放在这块内存区域中。</span></span><br><span class="line">    <span class="type">void</span> *v_addr;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 栈内存块的实际大小（以字节为单位）。</span></span><br><span class="line">    <span class="comment">// 这个大小是在创建时确定的，例如 64KB。</span></span><br><span class="line">    <span class="type">int</span> v_size;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 指向下一个 st_stack_t 结构体的指针。</span></span><br><span class="line">    <span class="comment">// 这是实现“空闲栈缓存池”的关键所在。当一个协程结束，它所使用的栈不会被立即释放，</span></span><br><span class="line">    <span class="comment">// 而是通过这个 next 指针被链接到一个全局的空闲链表（free list）中。</span></span><br><span class="line">    <span class="comment">// 当需要创建新协程时，框架会优先从这个链表中获取一个已分配的栈，从而避免了昂贵的 mmap 调用。</span></span><br><span class="line">    <span class="keyword">struct</span> <span class="title class_">_st_stack</span> *next;</span><br><span class="line"></span><br><span class="line">&#125; <span class="type">st_stack_t</span>;</span><br></pre></td></tr></table></figure>
+
+<h2 id="微线程状态和分类"><a href="#微线程状态和分类" class="headerlink" title="微线程状态和分类"></a>微线程状态和分类</h2><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 微线程状态定义</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> _ST_ST_RUNNING      0      <span class="comment">// 执行中 </span></span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> _ST_ST_RUNNABLE     1      <span class="comment">// 可执行状态，等待调度</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> _ST_ST_IO_WAIT      2      <span class="comment">// 等待IO事件</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> _ST_ST_LOCK_WAIT    3      <span class="comment">// 等待互斥锁</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> _ST_ST_COND_WAIT    4      <span class="comment">// 等待条件变量</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> _ST_ST_SLEEPING     5      <span class="comment">// sleep</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> _ST_ST_ZOMBIE       6      <span class="comment">// 微线程已结束，待其他微线程调用st_thread_join收尸</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> _ST_ST_SUSPENDED    7      <span class="comment">// 暂停，只能调用st_thread_interrupt唤醒</span></span></span><br><span class="line"></span><br><span class="line"><span class="comment">// 微线程flag定义</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> _ST_FL_PRIMORDIAL   0x01    <span class="comment">// 原生微线程，即不是创建的微线程，没有分配私有栈资源</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> _ST_FL_IDLE_THREAD  0x02    <span class="comment">// 空闲处理微线程，用于调用epoll，处理定时器</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> _ST_FL_ON_SLEEPQ    0x04    <span class="comment">// 微线程在sleep队列中，需要定时器的情况：调用st_usleep、st_cond_timedwait、st_poll等待IO事件等</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> _ST_FL_INTERRUPT    0x08    <span class="comment">// 微线程被调用st_thread_interrupt()中断</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> _ST_FL_TIMEDOUT     0x10    <span class="comment">// 微线程定时器超时</span></span></span><br></pre></td></tr></table></figure>
+
+<p>同时微线程被分成了三种角色，分别是Primordial、Idle、User</p>
+<ul>
+<li>Primoodial，当函数A调用st_init的时候，ST会将函数A的上下文包装成一个协程，负责初始化整个协程。</li>
+<li>User，由用户通过st_thread_create函数创建，负责具体的业务逻辑。</li>
+<li>Idle，同样是在st_init时被创建并维护，当ST中没有User正在运行时，会调用Idle微线程，用IO事件轮询器（如poll()或epoll_wait()），并把自己挂起，从而让整个进程进入睡眠状态，等待内核的唤醒。<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// idle微线程执行的start函数</span></span><br><span class="line"><span class="type">void</span> *_st_idle_thread_start(<span class="type">void</span> *arg)</span><br><span class="line">&#123;</span><br><span class="line">    <span class="type">_st_thread_t</span> *me = _ST_CURRENT_THREAD();</span><br><span class="line"></span><br><span class="line">    <span class="keyword">while</span> (_st_active_count &gt; <span class="number">0</span>) &#123;</span><br><span class="line">        <span class="comment">/* Idle vp till I/O is ready or the smallest timeout expired */</span></span><br><span class="line">	<span class="comment">// 调用IO多路复用函数（epoll，select等）等待IO事件发生，并处理所有发生的IO事件，</span></span><br><span class="line">	<span class="comment">// 如果微线程等待的IO事件发生，会将微线程从io等待队列st_vp_t.io_q中移除</span></span><br><span class="line">	<span class="comment">// 并加入到runable队列st_vp_t.run_q</span></span><br><span class="line">        _ST_VP_IDLE();</span><br><span class="line"></span><br><span class="line">        <span class="comment">/* Check sleep queue for expired threads */</span></span><br><span class="line">	<span class="comment">// 检查微线程设置的定时器是否超时，针对超时的微线程，将其从sleep队列移除</span></span><br><span class="line">	<span class="comment">// 并加入到runable队列</span></span><br><span class="line">        _st_vp_check_clock();</span><br><span class="line"></span><br><span class="line">	<span class="comment">// 交出运行权，并从runable队列st_vp_t.run_q中调度下一个微线程运行</span></span><br><span class="line">        me-&gt;state = _ST_ST_RUNNABLE;</span><br><span class="line">        _ST_SWITCH_CONTEXT(me);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* No more threads */</span></span><br><span class="line">    <span class="built_in">exit</span>(<span class="number">0</span>);</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* NOTREACHED */</span></span><br><span class="line">    <span class="keyword">return</span> <span class="literal">NULL</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
+</ul>
+<h1 id="初始化、创建、销毁流程"><a href="#初始化、创建、销毁流程" class="headerlink" title="初始化、创建、销毁流程"></a>初始化、创建、销毁流程</h1><h2 id="初始化"><a href="#初始化" class="headerlink" title="初始化"></a>初始化</h2><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 框架初始化函数</span></span><br><span class="line"><span class="function"><span class="type">int</span> <span class="title">st_init</span><span class="params">(<span class="type">void</span>)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="type">_st_thread_t</span> *thread;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (_st_active_count) &#123;</span><br><span class="line">        <span class="comment">/* Already initialized */</span></span><br><span class="line">        <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 选择使用哪个IO多路复用函数，如epoll、select等</span></span><br><span class="line">    <span class="built_in">st_set_eventsys</span>(ST_EVENTSYS_DEFAULT);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 屏蔽SIGPIPE信号 并 初始化IO多路复用函数相关数据结构</span></span><br><span class="line">    <span class="keyword">if</span> (_st_io_init() &lt; <span class="number">0</span>)</span><br><span class="line">        <span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line"></span><br><span class="line">    <span class="built_in">memset</span>(&amp;_st_this_vp, <span class="number">0</span>, <span class="built_in">sizeof</span>(<span class="type">_st_vp_t</span>));</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 清空runable队列、io等待队列、zombie队列</span></span><br><span class="line">    <span class="built_in">ST_INIT_CLIST</span>(&amp;_ST_RUNQ);</span><br><span class="line">    <span class="built_in">ST_INIT_CLIST</span>(&amp;_ST_IOQ);</span><br><span class="line">    <span class="built_in">ST_INIT_CLIST</span>(&amp;_ST_ZOMBIEQ);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 调用IO多路复用函数对应的初始化函数</span></span><br><span class="line">    <span class="keyword">if</span> ((*_st_eventsys-&gt;init)() &lt; <span class="number">0</span>)</span><br><span class="line">        <span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line"></span><br><span class="line">    _st_this_vp.pagesize = <span class="built_in">getpagesize</span>();</span><br><span class="line">    _st_this_vp.last_clock = <span class="built_in">st_utime</span>();</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 创建idle微线程，idle微线程主要用于调用epoll等待IO事件和处理定时器</span></span><br><span class="line">    _st_this_vp.idle_thread = <span class="built_in">st_thread_create</span>(_st_idle_thread_start,</span><br><span class="line">        <span class="literal">NULL</span>, <span class="number">0</span>, <span class="number">0</span>);</span><br><span class="line">    <span class="keyword">if</span> (!_st_this_vp.idle_thread)</span><br><span class="line">        <span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line">    _st_this_vp.idle_thread-&gt;flags = _ST_FL_IDLE_THREAD;</span><br><span class="line">    _st_active_count--;</span><br><span class="line">    <span class="comment">// 将idle微线程从runable队列移除，由于idle微线程只在没有微线程可以运行时，才会主动调度，</span></span><br><span class="line">    <span class="comment">// 所以不需要加入到run队列</span></span><br><span class="line">    _ST_DEL_RUNQ(_st_this_vp.idle_thread);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 初始化primordial微线程，primordial微线程用来标记系统进程，由于可以直接使用</span></span><br><span class="line">    <span class="comment">// 系统进程的栈空间，故只需要为primordial微线程分配st_thread_t和私有key数据区</span></span><br><span class="line">    thread = (<span class="type">_st_thread_t</span> *)<span class="built_in">calloc</span>(<span class="number">1</span>, <span class="built_in">sizeof</span>(<span class="type">_st_thread_t</span>) +</span><br><span class="line">        (ST_KEYS_MAX * <span class="built_in">sizeof</span>(<span class="type">void</span> *)));</span><br><span class="line">    <span class="keyword">if</span> (!thread)</span><br><span class="line">        <span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line">    thread-&gt;private_data = (<span class="type">void</span> **)(thread + <span class="number">1</span>);</span><br><span class="line">    thread-&gt;state = _ST_ST_RUNNING;</span><br><span class="line">    thread-&gt;flags = _ST_FL_PRIMORDIAL;</span><br><span class="line">    _ST_SET_CURRENT_THREAD(thread);</span><br><span class="line">    _st_active_count++;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 当前运行的微线程是primordial微线程，当primordial微线程退出时，整个进程也会终止</span></span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="微线程创建"><a href="#微线程创建" class="headerlink" title="微线程创建"></a>微线程创建</h2> <figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br></pre></td><td class="code"><pre><span class="line"> <span class="comment">// 创建微线程函数</span></span><br><span class="line"><span class="function"><span class="type">_st_thread_t</span> *<span class="title">st_thread_create</span><span class="params">(<span class="type">void</span> *(*start)(<span class="type">void</span> *arg), <span class="type">void</span> *arg,</span></span></span><br><span class="line"><span class="params"><span class="function">	                       <span class="type">int</span> joinable, <span class="type">int</span> stk_size)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="type">_st_thread_t</span> *thread;</span><br><span class="line">	<span class="type">_st_stack_t</span> *stack;</span><br><span class="line">	<span class="type">void</span> **ptds;</span><br><span class="line">	<span class="type">char</span> *sp;</span><br><span class="line">    <span class="comment">//step 1</span></span><br><span class="line">	<span class="keyword">if</span> (stk_size == <span class="number">0</span>)</span><br><span class="line">		stk_size = ST_DEFAULT_STACK_SIZE;  <span class="comment">// 默认栈空间为64K</span></span><br><span class="line">	<span class="comment">// 将栈空间调整为PAGE_SIZE的整数倍</span></span><br><span class="line">	stk_size = ((stk_size + _ST_PAGE_SIZE - <span class="number">1</span>) / _ST_PAGE_SIZE) * _ST_PAGE_SIZE;</span><br><span class="line">	<span class="comment">// 分配微线程使用的私有数据空间：包括栈空间，私有key数据区，st_thread_t结构体等</span></span><br><span class="line">	<span class="comment">// 为了避免频繁调用系统分配函数分配微线程栈空间，框架中保存了stack空闲链表，</span></span><br><span class="line">	<span class="comment">// 会优先从空闲链表获取，当空闲链表为空时，会从系统分配</span></span><br><span class="line">	stack = _st_stack_new(stk_size);</span><br><span class="line">	<span class="keyword">if</span> (!stack)</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">NULL</span>;</span><br><span class="line">    <span class="comment">//step 2</span></span><br><span class="line">	<span class="comment">// 初始化分配好的空间</span></span><br><span class="line">	sp = stack-&gt;stk_top;</span><br><span class="line">	sp = sp - (ST_KEYS_MAX * <span class="built_in">sizeof</span>(<span class="type">void</span> *));</span><br><span class="line">	ptds = (<span class="type">void</span> **)sp;</span><br><span class="line">	sp = sp - <span class="built_in">sizeof</span>(<span class="type">_st_thread_t</span>);</span><br><span class="line">	thread = (<span class="type">_st_thread_t</span> *)sp;</span><br><span class="line"></span><br><span class="line">	<span class="comment">// 保证栈可用位置一定是64字节对齐的</span></span><br><span class="line">	<span class="keyword">if</span> ((<span class="type">unsigned</span> <span class="type">long</span>)sp &amp; <span class="number">0x3f</span>)</span><br><span class="line">		sp = sp - ((<span class="type">unsigned</span> <span class="type">long</span>)sp &amp; <span class="number">0x3f</span>);</span><br><span class="line">	stack-&gt;sp = sp - _ST_STACK_PAD_SIZE;</span><br><span class="line"></span><br><span class="line">	<span class="comment">// 分配的空间重置为0，因为stack可能是从空闲链表中获取的</span></span><br><span class="line">	<span class="built_in">memset</span>(thread, <span class="number">0</span>, <span class="built_in">sizeof</span>(<span class="type">_st_thread_t</span>));</span><br><span class="line">	<span class="built_in">memset</span>(ptds, <span class="number">0</span>, ST_KEYS_MAX * <span class="built_in">sizeof</span>(<span class="type">void</span> *));</span><br><span class="line"></span><br><span class="line">	thread-&gt;private_data = ptds;</span><br><span class="line">	thread-&gt;stack = stack;</span><br><span class="line">	thread-&gt;start = start;</span><br><span class="line">	thread-&gt;arg = arg;</span><br><span class="line">    <span class="comment">//step 3</span></span><br><span class="line">	<span class="comment">// 调用setjmp保存当前的上下文信息到jmp_buf中，主要功能是初始化jmp_buf</span></span><br><span class="line">	<span class="comment">// 因为现在保存到jmp_buf中的信息不会在微线程的后续运行中使用到</span></span><br><span class="line">	<span class="keyword">if</span> (<span class="built_in">setjmp</span>(thread-&gt;context))</span><br><span class="line">		<span class="comment">// 当微线程首次被调度运行时，会进入该分支，并调用_st_thread_main函数执行</span></span><br><span class="line">		_st_thread_main();</span><br><span class="line">	<span class="comment">// 非常重要的一点：设置jmp_buf中的rsp指向为微线程分配的私有栈空间的可用位置</span></span><br><span class="line">	<span class="comment">// 这样可以保证框架中不同微线程运行在自己的私有栈空间上</span></span><br><span class="line">	thread-&gt;context[JB_RSP] = (<span class="type">long</span>)(stack-&gt;sp);</span><br><span class="line"></span><br><span class="line">	<span class="comment">// 如果微线程是可joinable的，就创建一个微线程终止时使用的条件变量</span></span><br><span class="line">	<span class="comment">// 当该微线程终止时会等待在该条件变量上，当其他微线程调用st_thread_join函数</span></span><br><span class="line">	<span class="comment">// 替该微线程收尸后，该微线程才会真正终止</span></span><br><span class="line">	<span class="keyword">if</span> (joinable) &#123;</span><br><span class="line">		thread-&gt;term = <span class="built_in">st_cond_new</span>();</span><br><span class="line">		<span class="keyword">if</span> (thread-&gt;term == <span class="literal">NULL</span>) &#123;</span><br><span class="line">			_st_stack_free(thread-&gt;stack);</span><br><span class="line">			<span class="keyword">return</span> <span class="literal">NULL</span>;</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="comment">// 设置为runable状态，并 加入到runable队列中</span></span><br><span class="line">	thread-&gt;state = _ST_ST_RUNNABLE;</span><br><span class="line">	_st_active_count++;</span><br><span class="line">	_ST_ADD_RUNQ(thread);</span><br><span class="line"></span><br><span class="line">	<span class="keyword">return</span> thread;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 微线程启动后调用的main函数</span></span><br><span class="line"><span class="type">void</span> _st_thread_main(<span class="type">void</span>)</span><br><span class="line">&#123;</span><br><span class="line">	<span class="type">_st_thread_t</span> *thread = _ST_CURRENT_THREAD();</span><br><span class="line"></span><br><span class="line">	<span class="comment">/*</span></span><br><span class="line"><span class="comment">	* Cap the stack by zeroing out the saved return address register</span></span><br><span class="line"><span class="comment">	* value. This allows some debugging/profiling tools to know when</span></span><br><span class="line"><span class="comment">	* to stop unwinding the stack. It&#x27;s a no-op on most platforms.</span></span><br><span class="line"><span class="comment">	*/</span></span><br><span class="line">	<span class="built_in">MD_CAP_STACK</span>(&amp;thread);</span><br><span class="line"></span><br><span class="line">	<span class="comment">// 调用微线程设置的start函数</span></span><br><span class="line">	thread-&gt;retval = (*thread-&gt;start)(thread-&gt;arg);</span><br><span class="line"></span><br><span class="line">	<span class="comment">// 清理微线程使用的资源</span></span><br><span class="line">	<span class="built_in">st_thread_exit</span>(thread-&gt;retval);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p> 创建微线程使用的私有栈-&gt;初始化私有栈-&gt;调用setjmp并修改jmp_buf</p>
+<p> 在创建微线程的过程中，核心在于，st_thread_create并不会直接让协程跳转到用户指定的函数（start_routine）。而是跳转到一个由ST框架提供的、名为_st_thread_main的内部包裹函数。creat这个函数是目前我见过最复杂的一个函数了，后续再去学习吧。。。</p>
+<h2 id="微线程切换与调度"><a href="#微线程切换与调度" class="headerlink" title="微线程切换与调度"></a>微线程切换与调度</h2> <figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 切换_thread微线程出去，并调度下一个runable状态的微线程运行</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> _ST_SWITCH_CONTEXT(_thread)       \</span></span><br><span class="line"><span class="meta">    &#123;                                     \</span></span><br><span class="line"><span class="meta">        <span class="keyword">if</span> (!setjmp(_thread-&gt;context)) &#123;  \</span></span><br><span class="line"><span class="meta">            _st_vp_schedule();            \</span></span><br><span class="line"><span class="meta">        &#125;                                 \</span></span><br><span class="line"><span class="meta">    &#125;</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// 微线程调度逻辑，即调度下一个runable状态微线程运行</span></span><br><span class="line"><span class="type">void</span> _st_vp_schedule(<span class="type">void</span>)</span><br><span class="line">&#123;</span><br><span class="line">	<span class="type">_st_thread_t</span> *thread;</span><br><span class="line"></span><br><span class="line">	<span class="comment">// 如果runable队列_st_this_vp.run_q非空，就选队列首的微线程</span></span><br><span class="line">	<span class="comment">// 否则调度idle微线程运行</span></span><br><span class="line">	<span class="keyword">if</span> (_ST_RUNQ.next != &amp;_ST_RUNQ) &#123;</span><br><span class="line">		thread = _ST_THREAD_PTR(_ST_RUNQ.next);</span><br><span class="line">		_ST_DEL_RUNQ(thread);</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">else</span> &#123;</span><br><span class="line">		thread = _st_this_vp.idle_thread;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="comment">// 设置选中的微线程的状态为running状态，并调用longjmp函数跳转到选中的微线程，</span></span><br><span class="line">        <span class="comment">// 选中的微线程从最后一次的setjmp位置继续运行</span></span><br><span class="line">	thread-&gt;state = _ST_ST_RUNNING;</span><br><span class="line">	_ST_SET_CURRENT_THREAD(thread);</span><br><span class="line">	<span class="built_in">longjmp</span>(thread-&gt;context, <span class="number">1</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="线程终止"><a href="#线程终止" class="headerlink" title="线程终止"></a>线程终止</h2><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br></pre></td><td class="code"><pre><span class="line"> <span class="comment">// 微线程终止时调用的函数</span></span><br><span class="line"><span class="function"><span class="type">void</span> <span class="title">st_thread_exit</span><span class="params">(<span class="type">void</span> *retval)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="type">_st_thread_t</span> *thread = _ST_CURRENT_THREAD();</span><br><span class="line"></span><br><span class="line">	thread-&gt;retval = retval;</span><br><span class="line"></span><br><span class="line">	<span class="comment">// 释放微线程运行期间调用st_thread_setspecific设置的私有key数据</span></span><br><span class="line">	_st_thread_cleanup(thread);</span><br><span class="line"></span><br><span class="line">	_st_active_count--;</span><br><span class="line"></span><br><span class="line">	<span class="comment">// 如果创建了term条件变量，需要通知调用st_thread_join()等待该微线程的微线程为该</span></span><br><span class="line">	<span class="comment">// 微线程“收尸”</span></span><br><span class="line">	<span class="keyword">if</span> (thread-&gt;term) &#123;</span><br><span class="line">		<span class="comment">// 添加到zombie队列</span></span><br><span class="line">		thread-&gt;state = _ST_ST_ZOMBIE;</span><br><span class="line">		_ST_ADD_ZOMBIEQ(thread);</span><br><span class="line"></span><br><span class="line">		<span class="comment">// 通知等待在term条件变量上的微线程</span></span><br><span class="line">		<span class="built_in">st_cond_signal</span>(thread-&gt;term);</span><br><span class="line"></span><br><span class="line">		<span class="comment">// 交出控制权，等到为本线程收尸的微线程调用st_thread_join()返回</span></span><br><span class="line">		<span class="comment">// 后，本微线程才会switch回来，并恢复运行</span></span><br><span class="line">		_ST_SWITCH_CONTEXT(thread);</span><br><span class="line"></span><br><span class="line">		<span class="comment">// 清理条件变量</span></span><br><span class="line">		<span class="built_in">st_cond_destroy</span>(thread-&gt;term);</span><br><span class="line">		thread-&gt;term = <span class="literal">NULL</span>;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="comment">// 如果终止的不是Primordial微线程，就释放为微线程分配的私有栈空间，</span></span><br><span class="line">	<span class="comment">// 释放的栈空间会放到空闲链表中</span></span><br><span class="line">	<span class="keyword">if</span> (!(thread-&gt;flags &amp; _ST_FL_PRIMORDIAL))</span><br><span class="line">		_st_stack_free(thread-&gt;stack);</span><br><span class="line"></span><br><span class="line">	<span class="comment">// 交出控制权，并调度下一个runable状态的微线程，微线程生命周期终止</span></span><br><span class="line">	_ST_SWITCH_CONTEXT(thread);</span><br><span class="line">	<span class="comment">/* Not going to land here */</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></article>
+<div class="article-footer">
+    <section id="license">
+      <div class="header"><span>License</span></div>
+      <div class="body"><p>本文采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">署名-非商业性使用-相同方式共享 4.0 国际</a> 许可协议，转载请注明出处。</p>
+</div>
+    </section>
+    
+    <section id="share">
+      <div class="header"><span>Share</span></div>
+      <div class="body">
+        <div class="link"><input class="copy-area" readonly="true" id="copy-link" value="https://yaheii.github.io/2025/08/05/SRS_2/" /></div>
+        <div class="social-wrap dis-select"><a class="social share-item wechat" onclick="util.toggle(&quot;qrcode-wechat&quot;)"><img  src="https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/social/b32ef3da1162a.svg" /></a></div>
+        
+        <div class="qrcode" id="qrcode-wechat" style="opacity:0;height:0">
+          <img src="https://api.qrserver.com/v1/create-qr-code/?size=256x256&data=https://yaheii.github.io/2025/08/05/SRS_2/"/>
+        </div>
+        
+      </div>
+    </section>
+    </div>
+
+<div class="related-wrap" id="read-next"><section class="body"><div class="item" id="prev"></div><div class="item" id="next"><div class="note">Older</div><a href="/2025/08/04/SRS_1/">SRS(1)-架构分析(WIP)</a></div></section></div>
+
+
+
+
+  <div class="related-wrap md-text" id="comments">
+    <section class='header cmt-title cap theme'>
+      <p>快来参与讨论吧~</p>
+
+    </section>
+    <section class='body cmt-body beaudar'>
+      
+
+<svg class="loading" style="vertical-align:middle;fill:currentColor;overflow:hidden;" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="2709"><path d="M832 512c0-176-144-320-320-320V128c211.2 0 384 172.8 384 384h-64zM192 512c0 176 144 320 320 320v64C300.8 896 128 723.2 128 512h64z" p-id="2710"></path></svg>
+
+<div id="beaudar" repo="xaoxuu/blog-comments" issue-term="pathname" theme="preferred-color-scheme" input-position="top" comment-order="desc" loading="false" branch="main"></div>
+
+    </section>
+  </div>
+
+
+
+<footer class="page-footer footnote"><hr><div class="text"><p>本站由 <a href="/">Edison.Chen</a> 使用 [Stellar主题创建。<br>本博客所有文章除特别声明外，均采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> 许可协议，转载请注明出处。</p>
+</div></footer>
+<div class="main-mask" onclick="sidebar.dismiss()"></div></div><aside class="l_right">
+<div class="widgets">
+
+
+
+<widget class="widget-wrapper toc" id="data-toc" collapse="false"><div class="widget-header dis-select"><span class="name">On This Page</span><a class="cap-action" onclick="sidebar.toggleTOC()" ><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6h11m-11 6h11m-11 6h11M4 6h1v4m-1 0h2m0 8H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg></a></div><div class="widget-body"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#%E7%B1%BB%E4%BC%BC%E6%A1%86%E6%9E%B6"><span class="toc-text">类似框架</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#ST%E6%A1%86%E6%9E%B6%E7%BB%93%E6%9E%84"><span class="toc-text">ST框架结构</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%A0%B8%E5%BF%83%E7%BB%93%E6%9E%84%E4%BD%93"><span class="toc-text">核心结构体</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#st-vp-t"><span class="toc-text">_st_vp_t</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#st-thread-t"><span class="toc-text">st_thread_t</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#st-stack-t"><span class="toc-text">st_stack_t</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%BE%AE%E7%BA%BF%E7%A8%8B%E7%8A%B6%E6%80%81%E5%92%8C%E5%88%86%E7%B1%BB"><span class="toc-text">微线程状态和分类</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%88%9D%E5%A7%8B%E5%8C%96%E3%80%81%E5%88%9B%E5%BB%BA%E3%80%81%E9%94%80%E6%AF%81%E6%B5%81%E7%A8%8B"><span class="toc-text">初始化、创建、销毁流程</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%88%9D%E5%A7%8B%E5%8C%96"><span class="toc-text">初始化</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%BE%AE%E7%BA%BF%E7%A8%8B%E5%88%9B%E5%BB%BA"><span class="toc-text">微线程创建</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%BE%AE%E7%BA%BF%E7%A8%8B%E5%88%87%E6%8D%A2%E4%B8%8E%E8%B0%83%E5%BA%A6"><span class="toc-text">微线程切换与调度</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%BA%BF%E7%A8%8B%E7%BB%88%E6%AD%A2"><span class="toc-text">线程终止</span></a></li></ol></li></ol></div><div class="widget-footer">
+
+<a class="top" onclick="util.scrollTop()"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><!-- Icon from Solar by 480 Design - https://creativecommons.org/licenses/by/4.0/ --><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="1.5"><path stroke-linejoin="round" d="m9 15.5l3-3l3 3m-6-4l3-3l3 3"/><path d="M7 3.338A9.95 9.95 0 0 1 12 2c5.523 0 10 4.477 10 10s-4.477 10-10 10S2 17.523 2 12c0-1.821.487-3.53 1.338-5"/></g></svg><span>Scroll to Top</span></a><a class="buttom" onclick="util.scrollComment()"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><!-- Icon from Solar by 480 Design - https://creativecommons.org/licenses/by/4.0/ --><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="1.5" d="M8 10.5h8M8 14h5.5M17 3.338A9.95 9.95 0 0 0 12 2C6.477 2 2 6.477 2 12c0 1.6.376 3.112 1.043 4.453c.178.356.237.763.134 1.148l-.595 2.226a1.3 1.3 0 0 0 1.591 1.592l2.226-.596a1.63 1.63 0 0 1 1.149.133A9.96 9.96 0 0 0 12 22c5.523 0 10-4.477 10-10c0-1.821-.487-3.53-1.338-5"/></svg><span>Join Discussion</span></a></div></widget>
+</div></aside><div class='float-panel'>
+  <button type='button' style='display:none' class='laptop-only rightbar-toggle mobile' onclick='sidebar.rightbar()'>
+    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6h11m-11 6h11m-11 6h11M4 6h1v4m-1 0h2m0 8H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg>
+  </button>
+  <button type='button' style='display:none' class='mobile-only leftbar-toggle mobile' onclick='sidebar.leftbar()'>
+    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 11c0-3.771 0-5.657 1.172-6.828C4.343 3 6.229 3 10 3h4c3.771 0 5.657 0 6.828 1.172C22 5.343 22 7.229 22 11v2c0 3.771 0 5.657-1.172 6.828C19.657 21 17.771 21 14 21h-4c-3.771 0-5.657 0-6.828-1.172C2 18.657 2 16.771 2 13z"/><path id="sep" stroke-linecap="round" d="M5.5 10h6m-5 4h4m4.5 7V3"/></g></svg>
+  </button>
+</div>
+</div><div class="scripts">
+
+
+<script type="text/javascript">
+  window.canonical = {"originalHost":null,"officialHosts":["localhost"],"encoded":""};
+  const ctx = {
+    date_suffix: {
+      just: `Just`,
+      min: `minutes ago`,
+      hour: `hours ago`,
+      day: `days ago`,
+    },
+    root : `/`,
+    tag_plugins: {
+      chat: Object.assign({"api":"https://siteinfo.listentothewind.cn/api/v1"}),
+    }
+  };
+
+  // required plugins (only load if needs)
+  if (`local_search`) {
+    ctx.search = {};
+    ctx.search.service = `local_search`;
+    if (ctx.search.service == 'local_search') {
+      let service_obj = Object.assign({}, `{"field":"all","path":"/search.json","content":true,"skip_search":[],"codeblock":true,"sort":"-date"}`);
+      ctx.search[ctx.search.service] = service_obj;
+    }
+  }
+  const def = {
+    avatar: `https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/avatar/round/3442075.svg`,
+    cover: `https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/cover/76b86c0226ffd.svg`,
+    loading: `https://api.iconify.design/eos-icons:three-dots-loading.svg?color=%231cd0fd`,
+  };
+  const deps = {
+    jquery: `https://gcore.jsdelivr.net/npm/jquery@3.7/dist/jquery.min.js`,
+    marked: `https://gcore.jsdelivr.net/npm/marked@13.0/lib/marked.umd.min.js`,
+    lazyload: `/%5Bobject%20Object%5D`
+  }
+  
+
+</script>
+
+<script type="text/javascript">
+  
+  function RunItem() {
+    this.list = []; // 存放回调函数
+    this.start = () => {
+      for (var i = 0; i < this.list.length; i++) {
+        this.list[i].run();
+      }
+    };
+    this.push = (fn, name, setRequestAnimationFrame = true) => {
+      let myfn = fn
+      if (setRequestAnimationFrame) {
+        myfn = () => {
+          utils.requestAnimationFrame(fn)
+        }
+      }
+      var f = new Item(myfn, name);
+      this.list.push(f);
+    };
+    this.remove = (name) => {
+      for (let index = 0; index < this.list.length; index++) {
+        const e = this.list[index];
+        if (e.name == name) {
+          this.list.splice(index, 1);
+        }
+      }
+    }
+    // 构造一个可以run的对象
+    function Item(fn, name) {
+      // 函数名称
+      this.name = name || fn.name;
+      // run方法
+      this.run = () => {
+        try {
+          fn()
+        } catch (error) {
+          console.log(error);
+        }
+      };
+    }
+  }
+
+  const utils = {
+    // 懒加载 css https://github.com/filamentgroup/loadCSS
+    css: (href, before, media, attributes) => {
+      var doc = window.document;
+      var ss = doc.createElement("link");
+      var ref;
+      if (before) {
+        ref = before;
+      } else {
+        var refs = (doc.body || doc.getElementsByTagName("head")[0]).childNodes;
+        ref = refs[refs.length - 1];
+      }
+      var sheets = doc.styleSheets;
+      if (attributes) {
+        for (var attributeName in attributes) {
+          if (attributes.hasOwnProperty(attributeName)) {
+            ss.setAttribute(attributeName, attributes[attributeName]);
+          }
+        }
+      }
+      ss.rel = "stylesheet";
+      ss.href = href;
+      ss.media = "only x";
+      function ready(cb) {
+        if (doc.body) {
+          return cb();
+        }
+        setTimeout(function () {
+          ready(cb);
+        });
+      }
+      ready(function () {
+        ref.parentNode.insertBefore(ss, before ? ref : ref.nextSibling);
+      });
+      var onloadcssdefined = function (cb) {
+        var resolvedHref = ss.href;
+        var i = sheets.length;
+        while (i--) {
+          if (sheets[i].href === resolvedHref) {
+            return cb();
+          }
+        }
+        setTimeout(function () {
+          onloadcssdefined(cb);
+        });
+      };
+      function loadCB() {
+        if (ss.addEventListener) {
+          ss.removeEventListener("load", loadCB);
+        }
+        ss.media = media || "all";
+      }
+      if (ss.addEventListener) {
+        ss.addEventListener("load", loadCB);
+      }
+      ss.onloadcssdefined = onloadcssdefined;
+      onloadcssdefined(loadCB);
+      return ss;
+    },
+
+    js: (src, opt) => new Promise((resolve, reject) => {
+      var script = document.createElement('script');
+      if (src.startsWith('/')) {
+        src = ctx.root + src.substring(1);
+      }
+      script.src = src;
+      if (opt) {
+        for (let key of Object.keys(opt)) {
+          script[key] = opt[key]
+        }
+      } else {
+        // 默认异步，如果需要同步，第二个参数传入 {} 即可
+        script.async = true
+      }
+      script.onerror = reject
+      script.onload = script.onreadystatechange = function () {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        script.onload = script.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(script)
+    }),
+
+    jq: (fn) => {
+      if (typeof jQuery === 'undefined') {
+        utils.js(deps.jquery).then(fn)
+      } else {
+        fn()
+      }
+    },
+
+    onLoading: (el) => {
+      if (el) {
+        $(el).append('<div class="loading-wrap"><svg xmlns="http://www.w3.org/2000/svg" width="2em" height="2em" preserveAspectRatio="xMidYMid meet" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="2"><path stroke-dasharray="60" stroke-dashoffset="60" stroke-opacity=".3" d="M12 3C16.9706 3 21 7.02944 21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3Z"><animate fill="freeze" attributeName="stroke-dashoffset" dur="1.3s" values="60;0"/></path><path stroke-dasharray="15" stroke-dashoffset="15" d="M12 3C16.9706 3 21 7.02944 21 12"><animate fill="freeze" attributeName="stroke-dashoffset" dur="0.3s" values="15;0"/><animateTransform attributeName="transform" dur="1.5s" repeatCount="indefinite" type="rotate" values="0 12 12;360 12 12"/></path></g></svg></div>');
+      }
+    },
+    onLoadSuccess: (el) => {
+      if (el) {
+        $(el).find('.loading-wrap').remove();
+      }
+    },
+    onLoadFailure: (el) => {
+      if (el) {
+        $(el).find('.loading-wrap svg').remove();
+        $(el).find('.loading-wrap').append('<svg xmlns="http://www.w3.org/2000/svg" width="2em" height="2em" preserveAspectRatio="xMidYMid meet" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path stroke-dasharray="60" stroke-dashoffset="60" d="M12 3L21 20H3L12 3Z"><animate fill="freeze" attributeName="stroke-dashoffset" dur="0.5s" values="60;0"/></path><path stroke-dasharray="6" stroke-dashoffset="6" d="M12 10V14"><animate fill="freeze" attributeName="stroke-dashoffset" begin="0.6s" dur="0.2s" values="6;0"/></path></g><circle cx="12" cy="17" r="1" fill="currentColor" fill-opacity="0"><animate fill="freeze" attributeName="fill-opacity" begin="0.8s" dur="0.4s" values="0;1"/></circle></svg>');
+        $(el).find('.loading-wrap').addClass('error');
+      }
+    },
+    request: (el, url, callback, onFailure) => {
+      let retryTimes = 3;
+      utils.onLoading(el);
+      function req() {
+        return new Promise((resolve, reject) => {
+          let status = 0; // 0 等待 1 完成 2 超时
+          let timer = setTimeout(() => {
+            if (status === 0) {
+              status = 2;
+              timer = null;
+              reject('请求超时');
+              if (retryTimes == 0) {
+                onFailure();
+              }
+            }
+          }, 5000);
+          fetch(url).then(function (response) {
+            if (status !== 2) {
+              clearTimeout(timer);
+              resolve(response);
+              timer = null;
+              status = 1;
+            }
+            if (response.ok) {
+              return response;
+            }
+            throw new Error('Network response was not ok.');
+          }).then(function (data) {
+            retryTimes = 0;
+            utils.onLoadSuccess(el);
+            callback(data);
+          }).catch(function (error) {
+            if (retryTimes > 0) {
+              retryTimes -= 1;
+              setTimeout(() => {
+                req();
+              }, 5000);
+            } else {
+              utils.onLoadFailure(el);
+              onFailure();
+            }
+          });
+        });
+      }
+      req();
+    },
+    /********************** requestAnimationFrame ********************************/
+    // 1、requestAnimationFrame 会把每一帧中的所有 DOM 操作集中起来，在一次重绘或回流中就完成，并且重绘或回流的时间间隔紧紧跟随浏览器的刷新频率，一般来说，这个频率为每秒60帧。
+    // 2、在隐藏或不可见的元素中，requestAnimationFrame 将不会进行重绘或回流，这当然就意味着更少的的 cpu，gpu 和内存使用量。
+    requestAnimationFrame: (fn) => {
+      if (!window.requestAnimationFrame) {
+        window.requestAnimationFrame = window.requestAnimationFrame || window.mozRequestAnimationFrame || window.webkitRequestAnimationFrame;
+      }
+      window.requestAnimationFrame(fn)
+    },
+    dark: {},
+  };
+
+  // utils.dark.mode 当前模式 dark or light
+  // utils.dark.toggle() 暗黑模式触发器
+  // utils.dark.push(callBack[,"callBackName"]) 传入触发器回调函数
+  utils.dark.method = {
+    toggle: new RunItem(),
+  };
+  utils.dark = Object.assign(utils.dark, {
+    push: utils.dark.method.toggle.push,
+  });
+</script>
+<script>
+  const sidebar = {
+    leftbar: () => {
+      if (l_body) {
+        l_body.toggleAttribute('leftbar');
+        l_body.removeAttribute('rightbar');
+      }
+    },
+    rightbar: () => {
+      if (l_body) {
+        l_body.toggleAttribute('rightbar');
+        l_body.removeAttribute('leftbar');
+      }
+    },
+    dismiss: () => {
+      if (l_body) {
+        l_body.removeAttribute('leftbar');
+        l_body.removeAttribute('rightbar');
+      }
+    },
+    toggleTOC: () => {
+      document.querySelector('#data-toc').classList.toggle('collapse');
+    }
+  }
+</script>
+<script type="text/javascript">
+  (() => {
+    const tagSwitchers = document.querySelectorAll('.tag-subtree.parent-tag > a > .tag-switcher-wrapper')
+    for (const tagSwitcher of tagSwitchers) {
+      tagSwitcher.addEventListener('click', (e) => {
+        const parent = e.target.closest('.tag-subtree.parent-tag')
+        parent.classList.toggle('expanded')
+        e.preventDefault()
+      })
+    }
+
+    // Get active tag from query string, then activate it.
+    const urlParams = new URLSearchParams(window.location.search)
+    const activeTag = urlParams.get('tag')
+    if (activeTag) {
+      let tag = document.querySelector(`.tag-subtree[data-tag="${activeTag}"]`)
+      if (tag) {
+        tag.querySelector('a').classList.add('active')
+        
+        while (tag) {
+          tag.classList.add('expanded')
+          tag = tag.parentElement.closest('.tag-subtree.parent-tag')
+        }
+      }
+    }
+  })()
+</script>
+
+<script async src="https://gcore.jsdelivr.net/npm/vanilla-lazyload@19.1/dist/lazyload.min.js"></script>
+<script>
+  // https://www.npmjs.com/package/vanilla-lazyload
+  // Set the options globally
+  // to make LazyLoad self-initialize
+  window.lazyLoadOptions = {
+    elements_selector: ".lazy, .lazyload",
+    callback_loaded: (el) => {
+      el.classList.add('loaded');
+      const wrapper = el.closest('.lazy-box');
+      const icon = wrapper?.querySelector('.lazy-icon');
+      if (icon) icon.remove();
+    }
+  };
+  // Listen to the initialization event
+  // and get the instance of LazyLoad
+  window.addEventListener(
+    "LazyLoad::Initialized",
+    function (event) {
+      window.lazyLoadInstance = event.detail.instance;
+    },
+    false
+  );
+  document.addEventListener('DOMContentLoaded', function () {
+    window.lazyLoadInstance?.update();
+  });
+
+  window.wrapLazyloadImages = (container) => {
+    if (typeof container === 'string') {
+      container = document.querySelector(container);
+    }
+    if (!container) return;
+    
+    const images = container.querySelectorAll('img');
+    images.forEach((img) => {
+      if (img.classList.contains('lazy')) return;
+
+      const src = img.getAttribute('src');
+      if (!src) return;
+
+      const wrapper = document.createElement('div');
+      wrapper.className = 'lazy-box';
+
+      const newImg = img.cloneNode();
+      newImg.removeAttribute('src');
+      newImg.setAttribute('data-src', src);
+      newImg.classList.add('lazy');
+
+      const icon = document.createElement('div');
+      icon.className = 'lazy-icon';
+      if (def.loading) {
+        icon.style.backgroundImage = `url("${def.loading}")`;
+      }
+
+      wrapper.appendChild(newImg);
+      wrapper.appendChild(icon);
+
+      img.replaceWith(wrapper);
+    });
+
+    // 通知 LazyLoad 更新
+    if (window.lazyLoadInstance?.update) {
+      window.lazyLoadInstance.update();
+    }
+  }
+  
+</script>
+
+<!-- required -->
+<script src="/js/main.js?v=1.32.3" defer></script>
+
+<script type="text/javascript">
+  const applyTheme = (theme) => {
+    if (theme === 'auto') {
+      document.documentElement.removeAttribute('data-theme')
+    } else {
+      document.documentElement.setAttribute('data-theme', theme)
+    }
+
+    // applyThemeToGiscus(theme)
+  }
+
+  // FIXME: 这会导致无法使用 preferred_color_scheme 以外的主题
+  const applyThemeToGiscus = (theme) => {
+    // theme = theme === 'auto' ? 'preferred_color_scheme' : theme
+    const cmt = document.getElementById('giscus')
+    if (cmt) {
+      // This works before giscus load.
+      cmt.setAttribute('data-theme', theme)
+    }
+
+    const iframe = document.querySelector('#comments > section.giscus > iframe')
+    if (iframe) {
+      // This works after giscus loaded.
+      const src = iframe.src
+      const newSrc = src.replace(/theme=[\w]+/, `theme=${theme}`)
+      iframe.src = newSrc
+    }
+  }
+
+  const switchTheme = () => {
+    // light -> dark -> auto -> light -> ...
+    const currentTheme = document.documentElement.getAttribute('data-theme')
+    let newTheme;
+    switch (currentTheme) {
+      case 'light':
+        newTheme = 'dark'
+        break
+      case 'dark':
+        newTheme = 'auto'
+        break
+      default:
+        newTheme = 'light'
+    }
+    applyTheme(newTheme)
+    window.localStorage.setItem('Stellar.theme', newTheme)
+    utils.dark.mode = newTheme === 'auto' ? (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light") : newTheme;
+    utils.dark.method.toggle.start();
+
+    const messages = {
+      light: `Switched to Light Mode`,
+      dark: `Switched to Dark Mode`,
+      auto: `Switched to Auto Mode`,
+    }
+    hud?.toast?.(messages[newTheme])
+  }
+
+  (() => {
+    // Apply user's preferred theme, if any.
+    const theme = window.localStorage.getItem('Stellar.theme')
+    if (theme !== null) {
+      applyTheme(theme)
+    } else {
+      utils.dark.mode = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    }
+    utils.dark.method.toggle.start();
+  })()
+</script>
+
+
+<!-- optional -->
+
+  <script type="module">
+  const el = document.querySelector('#comments #beaudar');
+  util.viewportLazyload(el, load_beaudar, false);
+
+  function load_beaudar() {
+    if (!el) return;
+    try {
+      el.innerHTML = '';
+    } catch (error) {
+      console.error(error);
+    }
+    const script = document.createElement('script');
+    script.src = 'https://beaudar.lipk.org/client.js';
+    script.async = true;
+    for (const key of Object.keys(el.attributes)) {
+      const attr = el.attributes[key];
+      if (['class', 'id'].includes(attr.name) === false) {
+        script.setAttribute(attr.name, attr.value);
+      }
+    }
+    el.appendChild(script);
+  }
+</script>
+
+
+
+
+<script defer>
+  window.addEventListener('DOMContentLoaded', (event) => {
+    ctx.services = Object.assign({}, JSON.parse(`{"mdrender":{"js":"/js/services/mdrender.js"},"siteinfo":{"js":"/js/services/siteinfo.js","api":null},"ghinfo":{"js":"/js/services/ghinfo.js"},"sites":{"js":"/js/services/sites.js"},"friends":{"js":"/js/services/friends.js"},"friends_and_posts":{"js":"/js/services/friends_and_posts.js"},"timeline":{"js":"/js/services/timeline.js"},"fcircle":{"js":"/js/services/fcircle.js"},"weibo":{"js":"/js/services/weibo.js"},"memos":{"js":"/js/services/memos.js"},"voice":{"js":"/js/plugins/voice.js"},"video":{"js":"/js/plugins/video.js"},"download-file":{"js":"/js/plugins/download-file.js"},"twikoo":{"js":"/js/services/twikoo_latest_comment.js"},"waline":{"js":"/js/services/waline_latest_comment.js"},"artalk":{"js":"/js/services/artalk_latest_comment.js"},"giscus":{"js":"/js/services/giscus_latest_comment.js"}}`));
+    for (let id of Object.keys(ctx.services)) {
+      const js = ctx.services[id].js;
+      if (id == 'siteinfo') {
+        ctx.cardlinks = document.querySelectorAll('a.link-card[cardlink]');
+        if (ctx.cardlinks?.length > 0) {
+          utils.js(js, { defer: true }).then(function () {
+            setCardLink(ctx.cardlinks);
+          });
+        }
+      } else if (id == 'voice') {
+        ctx.voiceAudios = document.querySelectorAll('.voice>audio');
+        if (ctx.voiceAudios?.length > 0) {
+          utils.js(js, { defer: true }).then(function () {
+            createVoiceDom(ctx.voiceAudios);
+          });
+        }
+      } else if (id == 'video') {
+        ctx.videos = document.querySelectorAll('.video>video');
+        if (ctx.videos?.length > 0) {
+          utils.js(js, { defer: true }).then(function () {
+            videoEvents(ctx.videos);
+          });
+        }
+      } else if (id == 'download-file') {
+        ctx.files = document.querySelectorAll('.file');
+        if (ctx.files?.length > 0) {
+          utils.js(js, { defer: true }).then(function () {
+            downloadFileEvent(ctx.files);
+          });
+        }
+      } else {
+        const els = document.getElementsByClassName(`ds-${id}`);
+        if (els?.length > 0) {
+          utils.jq(() => {
+            if (id == 'timeline' || 'memos' || 'marked') {
+              utils.js(deps.marked).then(function () {
+                utils.js(js, { defer: true });
+              });
+            } else {
+              utils.js(js, { defer: true });
+            }
+          });
+        }
+      }
+    }
+
+    // chat iphone time
+    let phoneTimes = document.querySelectorAll('.chat .status-bar .time');
+
+    if (phoneTimes.length > 0) {
+      NowTime();
+      var date = new Date();
+      var sec = date.getSeconds();
+      var firstAdjustInterval = setInterval(firstAdjustTime, 1000 * (60 - sec));
+    }
+
+    function firstAdjustTime() {
+      NowTime();
+      clearInterval(firstAdjustInterval);
+      setInterval(NowTime, 1000 * 60);
+    }
+
+    function NowTime() {
+      for (let i = 0; i < phoneTimes.length; ++i) {
+        var timeSpan = phoneTimes[i];
+        var date = new Date();
+        var hour = date.getHours();
+        var min = date.getMinutes();
+        timeSpan.innerHTML = check(hour) + ":" + check(min);
+      }
+    };
+
+    function check(val) {
+      if (val < 10) {
+        return ("0" + val);
+      }
+      return (val);
+    }
+
+    // chat quote
+    const chat_quote_obverser = new IntersectionObserver((entries, observer) => {
+      entries.filter((entry) => { return entry.isIntersecting }).sort((a, b) => a.intersectionRect.y !== b.intersectionRect.y ? a.intersectionRect.y - b.intersectionRect.y : a.intersectionRect.x - b.intersectionRect.x).forEach((entry, index) => {
+          observer.unobserve(entry.target);
+          setTimeout(() => {
+            entry.target.classList.add('quote-blink');
+            setTimeout(() => {
+              entry.target.classList.remove('quote-blink');
+            }, 1000);
+          }, Math.max(100, 16) * (index + 1));
+        });
+    });
+
+    var chatQuotes = document.querySelectorAll(".chat .talk .quote");
+    chatQuotes.forEach((quote) => {
+      quote.addEventListener('click', function () {
+        var chatCellDom = document.getElementById("quote-" + quote.getAttribute("quotedCellTag"));
+        if (chatCellDom) {
+          var chatDiv = chatCellDom.parentElement;
+          var mid = chatDiv.clientHeight / 2;
+          var offsetTop = chatCellDom.offsetTop;
+          if (offsetTop > mid - chatCellDom.clientHeight / 2) {
+            chatDiv.scrollTo({
+              top: chatCellDom.offsetTop - mid + chatCellDom.clientHeight / 2,
+              behavior: "smooth"
+            });
+          } else {
+            chatDiv.scrollTo({
+              top: 0,
+              behavior: "smooth"
+            });
+          }
+          chat_quote_obverser.observe(chatCellDom);
+        }
+      });
+    });
+  });
+</script>
+
+<script>
+  window.addEventListener('DOMContentLoaded', (event) => {
+    ctx.search = {
+      path: `/search.json`,
+    }
+    utils.js('/js/search/local-search.js', { defer: true });
+  });
+</script><script>
+  window.FPConfig = {
+    delay: 0,
+    ignoreKeywords: [],
+    maxRPS: 5,
+    hoverDelay: 25
+  };
+</script>
+<script defer src="https://gcore.jsdelivr.net/npm/flying-pages@2/flying-pages.min.js"></script><script>
+  ctx.fancybox = {
+    selector: `.timenode p>img`,
+    css: `https://gcore.jsdelivr.net/npm/@fancyapps/ui@5.0/dist/fancybox/fancybox.css`,
+    js: `https://gcore.jsdelivr.net/npm/@fancyapps/ui@5.0/dist/fancybox/fancybox.umd.js`
+  };
+  var selector = '[data-fancybox]:not(.error), .with-fancybox .atk-content img:not([atk-emoticon])';
+  if (ctx.fancybox.selector) {
+    selector += `, ${ctx.fancybox.selector}`
+  }
+  var needFancybox = document.querySelectorAll(selector).length !== 0;
+  if (!needFancybox) {
+    const memos = document.getElementsByClassName('ds-memos');
+    if (memos != undefined && memos.length > 0) {
+      needFancybox = true;
+    }
+    const fancybox = document.getElementsByClassName('with-fancybox');
+    if (fancybox != undefined && fancybox.length > 0) {
+      needFancybox = true;
+    }
+  }
+  if (needFancybox) {
+    utils.css(ctx.fancybox.css);
+    utils.js(ctx.fancybox.js, { defer: true }).then(function () {
+      Fancybox.bind(selector, {
+        hideScrollbar: false,
+        Thumbs: {
+          autoStart: false,
+        },
+        caption: (fancybox, slide) => {
+          return slide.triggerEl.alt || slide.triggerEl.dataset.caption || null
+        }
+      });
+    })
+  }
+</script>
+<script>
+  window.addEventListener('DOMContentLoaded', (event) => {
+    const swiper_api = document.getElementById('swiper-api');
+    if (swiper_api != undefined) {
+      utils.css(`https://unpkg.com/swiper@10.3/swiper-bundle.min.css`);
+      utils.js(`https://unpkg.com/swiper@10.3/swiper-bundle.min.js`, { defer: true }).then(function () {
+        const effect = swiper_api.getAttribute('effect') || '';
+        var swiper = new Swiper('.swiper#swiper-api', {
+          slidesPerView: 'auto',
+          spaceBetween: 8,
+          centeredSlides: true,
+          effect: effect,
+          rewind: true,
+          pagination: {
+            el: '.swiper-pagination',
+            clickable: true,
+          },
+          navigation: {
+            nextEl: '.swiper-button-next',
+            prevEl: '.swiper-button-prev',
+          },
+        });
+      })
+    }
+  });
+</script>
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    window.codeElements = document.querySelectorAll('.code');
+    if (window.codeElements.length > 0) {
+      ctx.copycode = {
+        default_text: `Copy`,
+        success_text: `Copied`,
+        toast: `复制成功`,
+      };
+      utils.js('/js/plugins/copycode.js');
+    }
+  });
+</script>
+
+
+<!-- inject -->
+
+</div></body></html>
