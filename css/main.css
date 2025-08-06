@@ -2398,7 +2398,7 @@ div.toast.show {
 .article-footer .social-wrap {
   grid-gap: 0.5rem 2rem;
   margin: 1rem 0 0.5rem;
-  grid-template-columns: repeat(auto-fill, 20px);
+  grid-template-columns: repeat(auto-fill, 60px);
 }
 .article-footer .social-wrap a.social {
   background: none;
@@ -6619,8 +6619,8 @@ details.toc[open] >div.body section .header+.doc_tree {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 20px;
-  height: 20px;
+  width: 80px;
+  height: 80px;
   padding: 6px;
   border-radius: 50%;
   background: transparent;
