@@ -1387,14 +1387,6 @@ a.button.start.gradient {
   -webkit-user-select: none;
   user-select: none;
 }
-.l_main .container,
-.l_side .container {
-  background: rgba(0,0,0,0.3);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
-  backdrop-filter: blur(20px) saturate(180%);
-  border: 1px solid rgba(255,255,255,0.2);
-  border-radius: 12px;
-}
 .particle {
   position: fixed;
   top: 0;
@@ -1922,6 +1914,17 @@ table:not([class]) {
 .highlight.yaml .line .attr {
   color: #e24f5a;
 }
+* {
+  outline: none;
+}
+html {
+  font-family: system-ui, "Microsoft Yahei", "Segoe UI", Arial, sans-serif;
+  font-size: 16px;
+  -webkit-text-size-adjust: 100%;
+  -ms-text-size-adjust: 100%;
+  scroll-padding-top: 8px;
+  scroll-behavior: smooth;
+}
 body {
   background: var(--background);
   margin: 0;
@@ -1929,11 +1932,6 @@ body {
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizelegibility;
   -webkit-tap-highlight-color: rgba(0,0,0,0);
-  background-image: url("/pic/assets/background.jpg");
-  background-size: cover;
-  background-repeat: no-repeat;
-  background-position: center center;
-  background-attachment: fixed;
 }
 div.lazy.img {
   width: 100%;
@@ -8337,16 +8335,16 @@ details.toc[open] >div.body section .header+.doc_tree {
   font-weight: 500;
 }
 .l_body[type='tech'] article.content h2 >a:first-child:before {
-  content: '👴';
+  content: '👨‍👧‍👦';
 }
 .l_body[type='tech'] article.content h3 >a:first-child:before {
-  content: '👱';
+  content: '🧑‍🧒‍🧒';
 }
 .l_body[type='tech'] article.content h4 >a:first-child:before {
-  content: '👶';
+  content: '👫';
 }
 .l_body[type='tech'] article.content h5 >a:first-child:before {
-  content: '👼';
+  content: '🧘‍♂️';
 }
 .md-text.error-page {
   text-align: center;
